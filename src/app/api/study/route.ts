@@ -6,7 +6,7 @@ export const maxDuration = 60;
 
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY!;
 const DEEPSEEK_BASE_URL = process.env.DEEPSEEK_BASE_URL || "https://openrouter.ai/api/v1";
-const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || "deepseek/deepseek-v4-pro";
+const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || "deepseek/deepseek-chat";
 
 const SYSTEM_PROMPT = `You are Shepherd AI, a theologically conservative KJV Bible study assistant.
 
@@ -121,10 +121,17 @@ Generate the study following your system instructions. Return valid JSON only.`;
     }
 
     // Parse the JSON response from DeepSeek
+    // V3 sometimes wraps JSON in ```json ... ``` — strip that
+    let cleanContent = content.trim();
+    if (cleanContent.startsWith("```")) {
+      cleanContent = cleanContent.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "");
+    }
+
     let studyData;
     try {
-      studyData = JSON.parse(content);
+      studyData = JSON.parse(cleanContent);
     } catch {
+      console.error("Failed to parse DeepSeek response as JSON. Raw:", content.slice(0, 500));
       studyData = {
         passage_reference: result.reference,
         passage_text: passageText,
