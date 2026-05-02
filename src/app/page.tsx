@@ -1,9 +1,42 @@
+"use client";
+
+import { useAuth, SignOutButton } from "@clerk/nextjs";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function LandingPage() {
+  const { isSignedIn, isLoaded } = useAuth();
+  const router = useRouter();
+
+  // If signed in, redirect to /app
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      router.push("/app");
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  // Show nothing while Clerk loads (prevents blink)
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-[#0d1117] flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-2 border-[#58a6ff] border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  // Signed in — short redirect (useEffect handles it, show loading)
+  if (isSignedIn) {
+    return (
+      <div className="min-h-screen bg-[#0d1117] flex items-center justify-center">
+        <p className="text-[#8b949e]">Taking you to your studies...</p>
+      </div>
+    );
+  }
+
+  // Not signed in — show landing page
   return (
     <div className="min-h-screen bg-[#0d1117] flex flex-col">
-      {/* Hero */}
       <header className="text-center px-4 pt-24 pb-16 relative flex-1 flex flex-col items-center justify-center">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none"
           style={{ background: "radial-gradient(circle, rgba(88,166,255,0.06) 0%, transparent 70%)" }} />
@@ -38,7 +71,6 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Features */}
       <section className="max-w-5xl mx-auto px-4 pb-20">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
@@ -56,7 +88,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-[#30363d] text-center py-6 text-[#484f58] text-xs">
         <p>Shepherd AI · Built for deeper KJV study · All scripture is public domain</p>
       </footer>
