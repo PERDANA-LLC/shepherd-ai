@@ -8,47 +8,203 @@ const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY!;
 const DEEPSEEK_BASE_URL = process.env.DEEPSEEK_BASE_URL || "https://openrouter.ai/api/v1";
 const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || "deepseek/deepseek-chat";
 
-const SYSTEM_PROMPT = `You are Shepherd AI, a theologically conservative KJV Bible study assistant.
+// ── Level definitions ──────────────────────────────────────────────
 
-Your responses must:
-1. Use ONLY the King James Version for all scripture quotations.
+const LEVEL_CONFIG: Record<number, { name: string; audience: string; voice: string }> = {
+  1: {
+    name: "5th Grader",
+    audience: "10-11 year old child",
+    voice: "Simple sentences. No theological jargon. Every abstract concept gets a concrete example from school, sports, or family life. How would you explain this at the dinner table to a 10-year-old?",
+  },
+  2: {
+    name: "High Schooler",
+    audience: "14-18 year old teenager",
+    voice: "Direct, relatable, no Sunday School clichés. Address real teenage struggles — identity, peer pressure, anxiety, purpose. Treat them as young adults who can handle complexity but need it grounded in their actual experience.",
+  },
+  3: {
+    name: "College",
+    audience: "undergraduate college student",
+    voice: "Academic but accessible. Assume basic biblical literacy, historical context awareness, and willingness to engage multiple viewpoints. Prepare them to teach this material to others. Use Reformed hermeneutics as the interpretive lens.",
+  },
+  4: {
+    name: "PhD",
+    audience: "seminary or doctoral-level scholar",
+    voice: "Scholarly. Assume seminary-level training in biblical languages, hermeneutics, and systematic theology. The goal is original contribution — the student should leave ready to write, teach, or defend this material at an academic level. Use precise theological terminology. Engage named scholars and academic sources.",
+  },
+};
+
+function buildSystemPrompt(level: number): string {
+  const cfg = LEVEL_CONFIG[level] || LEVEL_CONFIG[3];
+
+  const base = `You are Shepherd AI, a theologically conservative KJV Bible study assistant.
+
+Your response is for a LEVEL ${level} study — audience: ${cfg.audience}.
+Voice: ${cfg.voice}
+
+Core rules (ALL levels):
+1. Use ONLY the King James Version for ALL scripture quotations.
 2. Maintain doctrinal fidelity to historic Protestant orthodoxy.
-3. When discussing word meanings, reference Strong's Concordance numbers.
-4. Provide 3-5 cross-references for each key verse.
-5. Include 2-3 application questions for personal reflection.
-6. Note any significant Hebrew/Greek word insights.
-7. Be scholarly yet accessible — written for everyday believers, not seminarians.
-8. NEVER speculate beyond what scripture actually says.
-9. If a passage has multiple orthodox interpretations, present them fairly
-   without undermining the authority of scripture.
-10. End each study with a brief prayer prompt related to the passage.
+3. NEVER speculate beyond what scripture actually says.
+4. Scripture references use standard notation (e.g., John 3:16).
+5. Return valid JSON only — no markdown fences, no extra text.`;
 
-Format your response as JSON with these exact keys:
+  const levelPrompts: Record<number, string> = {
+    1: `
+LEVEL 1 — 5TH GRADER FORMAT:
 {
   "passage_reference": "string",
-  "passage_text": "string (the full KJV text)",
-  "historical_context": "string",
-  "verse_breakdown": [
+  "passage_text": "string (full KJV text)",
+  "level": 1,
+  "level_name": "5th Grader",
+  "big_idea": "ONE sentence under 15 words — the single most important thing to remember",
+  "memory_verse": {
+    "verse": "string",
+    "text": "string (KJV)",
+    "hand_motion": "string (a gesture or rhythm to help memorize)"
+  },
+  "picture_this": "A visual metaphor a 10-year-old instantly understands. Start with 'It\\'s like when...'",
+  "think_about_it": ["2-3 simple questions like 'Have you ever felt...?'"],
+  "try_this": "One hands-on activity: draw, act out, tell someone",
+  "talk_to_god": "A 2-3 sentence prayer a child can pray themselves",
+  "show_someone": "One thing to tell a parent or friend about what you learned"
+}`,
+
+    2: `
+LEVEL 2 — HIGH SCHOOLER FORMAT:
+{
+  "passage_reference": "string",
+  "passage_text": "string (full KJV text)",
+  "level": 2,
+  "level_name": "High Schooler",
+  "the_hook": "Open with a real scenario a teenager faces today (social media, friendship drama, academic pressure, questioning faith). 2-3 sentences.",
+  "the_text": [{"verse": "string", "text": "string (KJV)", "context": "1-2 sentence background"}],
+  "what_it_really_means": "One paragraph in plain English. What did this mean then, and what does it mean for a teenager today?",
+  "the_clash": "One way this biblical truth conflicts with what culture/social media tells teenagers. Name the tension.",
+  "your_turn": ["3-4 personal reflection questions pushing past Sunday School answers"],
+  "this_week": "One concrete, measurable challenge for this week",
+  "prayer": "A short honest prayer a teenager could actually pray"
+}`,
+
+    3: `
+LEVEL 3 — COLLEGE FORMAT:
+{
+  "passage_reference": "string",
+  "passage_text": "string (full KJV text)",
+  "level": 3,
+  "level_name": "College",
+  "thesis_statement": "One sentence: the central argument this passage makes. Debatable, defensible, specific.",
+  "text_and_context": {
+    "historical_background": "What was happening when this was written",
+    "literary_context": "Where does this fit in the book's argument",
+    "authorial_intent": "What was the writer trying to accomplish"
+  },
+  "word_study": {
+    "word": "string (transliterated Greek/Hebrew)",
+    "strongs": "string (e.g. G4102)",
+    "definition": "string",
+    "semantic_range": "string",
+    "other_uses": ["2 other verses with different nuance"]
+  },
+  "interpretive_options": [
     {
-      "verse": "string (e.g. 'John 3:16')",
-      "text": "string (KJV text of this verse)",
-      "explanation": "string",
-      "cross_references": ["string (e.g. 'Romans 5:8')"],
-      "word_study": "string (optional, mention Strong's numbers)"
+      "view": "string (name this view)",
+      "description": "string",
+      "strength": "string",
+      "weakness": "string"
     }
   ],
-  "key_themes": ["string"],
-  "application_questions": ["string"],
-  "prayer_prompt": "string"
-}`;
+  "reformed_view": "Which view is most consistent with Reformed hermeneutics and why",
+  "theological_pitfalls": {
+    "misunderstanding": "string",
+    "consequence": "What happens when a church gets this wrong",
+    "corrective_verse": "string"
+  },
+  "discussion_questions": ["4-5 debate-generating questions for a college small group"],
+  "research_assignment": "One task requiring outside work (commentaries, translations, thematic study)",
+  "teach_it": "A 3-point outline for teaching this to a high schooler"
+}`,
+
+    4: `
+LEVEL 4 — PhD FORMAT:
+{
+  "passage_reference": "string",
+  "passage_text": "string (full KJV text)",
+  "level": 4,
+  "level_name": "PhD",
+  "research_question": "Frame as an answerable academic question",
+  "exegetical_analysis": [
+    {
+      "verse": "string",
+      "greek_or_hebrew": "string (transliterated if needed)",
+      "parsing": "Verb parsing: tense, voice, mood, person, number",
+      "syntax": "Syntactical observations",
+      "textual_variants": "Any significant manuscript variants",
+      "lxx_background": "Septuagint background if OT citation"
+    }
+  ],
+  "philological_deep_dive": {
+    "word": "string",
+    "etymology": "string",
+    "cognates": "Related words in cognate languages",
+    "diachronic_development": "How the meaning evolved over time",
+    "synchronic_usage": "How it's used in the same corpus",
+    "dictionary_entries": "Key insights from TDNT, NIDNTTE, or TLOT"
+  },
+  "scholarly_debate": [
+    {
+      "position": "string",
+      "scholar": "Name the scholar and work",
+      "argument": "string",
+      "presuppositions": "Methodological assumptions behind this view"
+    }
+  ],
+  "reformed_position": "Which position is most defensible from confessional Reformed perspective with exegetical warrant",
+  "pastoral_note": "If a pastor adopts View A, their congregation will tend toward ___. If View B, toward ___.",
+  "annotated_bibliography": [
+    {"source": "string (author, title)", "type": "commentary|journal|monograph|historical_theology", "annotation": "1-2 sentence contribution and limitation"}
+  ],
+  "systematic_theology_connection": {
+    "locus": "prolegomena|theology_proper|anthropology|christology|soteriology|pneumatology|ecclesiology|eschatology",
+    "explanation": "How this passage supports, nuances, or challenges the confessional formulation"
+  },
+  "sermon_prep": {
+    "titles": ["3 sermon titles with homiletical angle"],
+    "outline": "Full sermon outline: intro, points, illustrations, application, conclusion",
+    "tough_questions": ["Top 3 objections and exegetical answers"]
+  },
+  "original_contribution": "What new insight does this study offer?",
+  "research_plan": "30-day schedule: reading days, writing days, peer review, revision, delivery requirement"
+}`,
+  };
+
+  return `${base}
+
+${levelPrompts[level] || levelPrompts[3]}
+
+IMPORTANT: Return ONLY the JSON object. No markdown fences, no explanation text.`;
+}
+
+// ── Request / Response types ──────────────────────────────────────
 
 interface StudyRequest {
   passage: string;
+  level?: number; // 1=5th, 2=high school, 3=college, 4=PhD (default: 3)
 }
+
+function validateLevel(level: unknown): number {
+  if (level === undefined || level === null) return 3; // default: college
+  const n = Number(level);
+  if (n >= 1 && n <= 4) return n;
+  return 3;
+}
+
+// ── Handler ───────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
   try {
-    const { passage } = (await request.json()) as StudyRequest;
+    const body = await request.json() as StudyRequest;
+    const { passage } = body;
+    const level = validateLevel(body.level);
 
     if (!passage || typeof passage !== "string") {
       return NextResponse.json(
@@ -57,7 +213,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 1: Look up passage from local KJV database (31,102 verses)
+    // Step 1: Look up passage from local KJV database
     const result = lookupPassage(passage);
 
     if (result.error || result.verses.length === 0) {
@@ -68,15 +224,16 @@ export async function POST(request: NextRequest) {
     }
 
     const passageText = versesToText(result.verses);
+    const cfg = LEVEL_CONFIG[level];
 
-    // Step 2: Send to DeepSeek for AI-powered study
-    const userMessage = `Please provide a comprehensive KJV Bible study for the following passage:
+    // Step 2: Build level-specific prompt and send to DeepSeek
+    const systemPrompt = buildSystemPrompt(level);
 
-**Reference:** ${result.reference}
-**KJV Text:**
+    const userMessage = `Passage: ${result.reference}
+KJV Text:
 ${passageText}
 
-Generate the study following your system instructions. Return valid JSON only.`;
+Generate a Level ${level} (${cfg.name}) Bible study following your system instructions. Return valid JSON only.`;
 
     const aiResponse = await fetch(`${DEEPSEEK_BASE_URL}/chat/completions`, {
       method: "POST",
@@ -90,13 +247,11 @@ Generate the study following your system instructions. Return valid JSON only.`;
       body: JSON.stringify({
         model: DEEPSEEK_MODEL,
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: systemPrompt },
           { role: "user", content: userMessage },
         ],
         temperature: 0.7,
-        max_tokens: 4000,
-        // NOTE: DeepSeek v4 Pro (reasoning model) does not support response_format json_object.
-        // JSON enforcement is handled by the system prompt instead.
+        max_tokens: 6000,
       }),
     });
 
@@ -113,15 +268,14 @@ Generate the study following your system instructions. Return valid JSON only.`;
     const content = aiData.choices?.[0]?.message?.content;
 
     if (!content) {
-      console.error("DeepSeek returned empty content. Full response:", JSON.stringify(aiData).slice(0, 500));
+      console.error("DeepSeek returned empty content.");
       return NextResponse.json(
-        { error: "The AI study engine returned an empty response. This can happen if the passage is too long or the API is rate-limited. Try a shorter passage." },
+        { error: "The AI study engine returned an empty response. Try a shorter passage." },
         { status: 502 }
       );
     }
 
-    // Parse the JSON response from DeepSeek
-    // V3 sometimes wraps JSON in ```json ... ``` — strip that
+    // Parse JSON — V3 sometimes wraps in ```json fences
     let cleanContent = content.trim();
     if (cleanContent.startsWith("```")) {
       cleanContent = cleanContent.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "");
@@ -135,15 +289,23 @@ Generate the study following your system instructions. Return valid JSON only.`;
       studyData = {
         passage_reference: result.reference,
         passage_text: passageText,
+        level,
+        level_name: cfg.name,
         raw_study: content,
+        parse_error: true,
       };
     }
 
-    // Step 3: Return the complete study
+    // Ensure level info is present
+    if (!studyData.level) studyData.level = level;
+    if (!studyData.level_name) studyData.level_name = cfg.name;
+
     return NextResponse.json({
       success: true,
       reference: result.reference,
       translation: "King James Version (local)",
+      level,
+      level_name: cfg.name,
       study: studyData,
     });
   } catch (error) {
