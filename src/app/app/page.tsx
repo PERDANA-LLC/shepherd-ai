@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useAuth } from "@clerk/nextjs";
 import { downloadStudyPDF } from "@/lib/pdf";
 
 // ── Types (shared with landing page) ───────────────────────────────
@@ -192,6 +193,7 @@ function LevelResult({ study, level }: { study: any; level: number }) {
 // ── Main App Page ──────────────────────────────────────────────────
 
 export default function AppPage() {
+  const { getToken, userId } = useAuth();
   const [passage, setPassage] = useState("");
   const [level, setLevel] = useState<StudyLevel>(3);
   const [loading, setLoading] = useState(false);
@@ -203,8 +205,59 @@ export default function AppPage() {
   const [recsLoading, setRecsLoading] = useState(false);
   const [recError, setRecError] = useState("");
   const [selectedRec, setSelectedRec] = useState<string | null>(null);
+  const [profile, setProfile] = useState<any>(null);
 
-  useEffect(() => { setHistory(loadHistory()); }, []);
+  // Load profile + history from Supabase on mount
+  useEffect(() => {
+    async function load() {
+      const token = await getToken();
+      if (!token || !userId) return;
+
+      // Auto-create/get profile
+      try {
+        const pRes = await fetch("/api/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (pRes.ok) {
+          const pData = await pRes.json();
+          setProfile(pData.profile);
+        }
+      } catch { /* silent */ }
+
+      // Load history from Supabase
+      try {
+        const hRes = await fetch("/api/history", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (hRes.ok) {
+          const hData = await hRes.json();
+          if (hData.studies?.length > 0) {
+            const supabaseHistory: HistoryEntry[] = hData.studies.map((s: any) => ({
+              id: s.id,
+              reference: s.passage,
+              date: new Date(s.created_at).toLocaleString(),
+              study: {
+                success: true,
+                reference: s.passage,
+                translation: "King James Version (local)",
+                level: s.level,
+                level_name: `Level ${s.level}`,
+                study: s.content,
+              },
+            }));
+            setHistory(supabaseHistory);
+          }
+        }
+      } catch { /* silent */ }
+
+      // Fallback: load localStorage if Supabase is empty
+      const local = loadHistory();
+      if (local.length > 0 && history.length === 0) {
+        setHistory(local);
+      }
+    }
+    if (userId) load();
+  }, [userId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -219,7 +272,32 @@ export default function AppPage() {
       let data;
       try { data = JSON.parse(text); } catch { setError("The server returned an unexpected response."); return; }
       if (!res.ok) { setError(data.error || `Server error (${res.status}).`); }
-      else { setStudy(data); saveToHistory(data); setHistory(loadHistory()); }
+      else {
+        setStudy(data);
+        saveToHistory(data);
+        setHistory(loadHistory());
+        // Save to Supabase
+        try {
+          const token = await getToken();
+          if (token) {
+            await fetch("/api/history", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                passage: data.reference,
+                level: data.level,
+                level_name: data.level_name,
+                content: data.study,
+                christological_root: (data.study as any).christological_root || null,
+                title: (data.study as any).title || null,
+              }),
+            });
+          }
+        } catch { /* silent — localStorage still works */ }
+      }
     } catch (err: unknown) {
       if (err instanceof DOMException && err.name === "AbortError") setError("Study took too long. Try a shorter passage.");
       else setError("Could not connect. Check your internet.");
@@ -389,7 +467,16 @@ export default function AppPage() {
           <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-[#c9d1d9]">📋 Recent Studies</h3>
-              <button onClick={() => { clearHistory(); setHistory([]); setShowHistory(false); }} className="text-xs px-2.5 py-1 bg-[#21262d] text-[#8b949e] hover:text-[#f85149] rounded-md border border-[#30363d] transition-all">Clear All</button>
+              <button onClick={async () => {
+                clearHistory();
+                setHistory([]);
+                setShowHistory(false);
+                // Clear Supabase too
+                try {
+                  const token = await getToken();
+                  if (token) await fetch("/api/history", { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+                } catch {}
+              }} className="text-xs px-2.5 py-1 bg-[#21262d] text-[#8b949e] hover:text-[#f85149] rounded-md border border-[#30363d] transition-all">Clear All</button>
             </div>
             <div className="space-y-2">
               {history.map(entry => (
