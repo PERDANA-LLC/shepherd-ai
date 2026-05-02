@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { lookupPassage, versesToText } from "@/lib/bible";
+import { CHRISTOLOGICAL_ROOT_PROMPT } from "@/lib/christological-root";
 
 // Vercel Hobby plan allows up to 60s for serverless functions
 export const maxDuration = 60;
@@ -36,7 +37,11 @@ const LEVEL_CONFIG: Record<number, { name: string; audience: string; voice: stri
 function buildSystemPrompt(level: number): string {
   const cfg = LEVEL_CONFIG[level] || LEVEL_CONFIG[3];
 
-  const base = `You are Shepherd AI, a theologically conservative KJV Bible study assistant.
+  const base = `${CHRISTOLOGICAL_ROOT_PROMPT}
+
+---
+
+You are Shepherd AI, a theologically conservative KJV Bible study assistant.
 
 Your response is for a LEVEL ${level} study — audience: ${cfg.audience}.
 Voice: ${cfg.voice}
