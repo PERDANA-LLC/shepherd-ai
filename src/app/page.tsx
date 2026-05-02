@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { downloadStudyPDF } from "@/lib/pdf";
 
 interface VerseBreakdown {
   verse: string;
@@ -27,11 +28,57 @@ interface StudyResponse {
   study: StudyData;
 }
 
+interface HistoryEntry {
+  id: string;
+  reference: string;
+  date: string;
+  study: StudyResponse;
+}
+
+const HISTORY_KEY = "shepherd-ai-history";
+const MAX_HISTORY = 20;
+
+function loadHistory(): HistoryEntry[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveToHistory(study: StudyResponse): void {
+  if (typeof window === "undefined") return;
+  const history = loadHistory();
+  // Remove duplicate if same reference already exists
+  const filtered = history.filter((h) => h.reference !== study.reference);
+  const entry: HistoryEntry = {
+    id: Date.now().toString(36),
+    reference: study.reference,
+    date: new Date().toLocaleString(),
+    study,
+  };
+  filtered.unshift(entry);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(filtered.slice(0, MAX_HISTORY)));
+}
+
+function clearHistory(): void {
+  localStorage.removeItem(HISTORY_KEY);
+}
+
 export default function Home() {
   const [passage, setPassage] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [study, setStudy] = useState<StudyResponse | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+
+  // Load history on mount
+  useEffect(() => {
+    setHistory(loadHistory());
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +115,8 @@ export default function Home() {
         setError(data.error || `Server error (${res.status}). Please try again.`);
       } else {
         setStudy(data);
+        saveToHistory(data);
+        setHistory(loadHistory());
       }
     } catch (err: unknown) {
       if (err instanceof DOMException && err.name === "AbortError") {
@@ -152,6 +201,18 @@ export default function Home() {
                 {ref}
               </button>
             ))}
+            {history.length > 0 && (
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
+                  showHistory
+                    ? "bg-[rgba(88,166,255,0.12)] border-[rgba(88,166,255,0.3)] text-[#58a6ff]"
+                    : "bg-[#21262d] text-[#8b949e] hover:text-[#58a6ff] hover:bg-[#30363d] border-[#30363d]"
+                }`}
+              >
+                📋 History ({history.length})
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -193,6 +254,53 @@ export default function Home() {
         </div>
       )}
 
+      {/* History Panel */}
+      {showHistory && history.length > 0 && (
+        <div className="max-w-3xl mx-auto px-4 pb-12">
+          <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-[#c9d1d9] flex items-center gap-2">
+                📋 Recent Studies
+              </h3>
+              <button
+                onClick={() => {
+                  clearHistory();
+                  setHistory([]);
+                  setShowHistory(false);
+                }}
+                className="text-xs px-2.5 py-1 bg-[#21262d] text-[#8b949e] hover:text-[#f85149] rounded-md border border-[#30363d] transition-all"
+              >
+                Clear All
+              </button>
+            </div>
+            <div className="space-y-2">
+              {history.map((entry) => (
+                <button
+                  key={entry.id}
+                  onClick={() => {
+                    setStudy(entry.study);
+                    setError("");
+                    setShowHistory(false);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="w-full text-left bg-[#0d1117] border border-[#30363d] hover:border-[#58a6ff] rounded-lg px-4 py-3 transition-all group"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#58a6ff] font-medium text-sm group-hover:text-[#79c0ff]">
+                      {entry.reference}
+                    </span>
+                    <span className="text-[#484f58] text-xs">{entry.date}</span>
+                  </div>
+                  <p className="text-[#8b949e] text-xs mt-1 line-clamp-1">
+                    {entry.study.study.passage_text.slice(0, 120)}...
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Footer */}
       <footer className="text-center py-8 border-t border-[#30363d] text-[#484f58] text-xs">
         <p>
@@ -213,9 +321,20 @@ function StudyResult({ study }: { study: StudyResponse }) {
       <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-6">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-xl font-bold">{s.passage_reference}</h2>
-          <span className="text-xs px-3 py-1 bg-[#21262d] rounded-full text-[#8b949e] border border-[#30363d]">
-            {study.translation}
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => downloadStudyPDF(study)}
+              className="text-xs px-3 py-1.5 bg-[#1f6feb] hover:bg-[#388bfd] text-white rounded-lg font-medium transition-all flex items-center gap-1.5"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              PDF
+            </button>
+            <span className="text-xs px-3 py-1 bg-[#21262d] rounded-full text-[#8b949e] border border-[#30363d]">
+              {study.translation}
+            </span>
+          </div>
         </div>
         <blockquote className="border-l-3 border-[#d2991d] pl-4 text-[#c9d1d9] leading-relaxed whitespace-pre-line italic">
           {s.passage_text}
@@ -248,9 +367,7 @@ function StudyResult({ study }: { study: StudyResponse }) {
                   {v.explanation}
                 </p>
                 {v.word_study && (
-                  <div className="bg-[rgba(163,113,247,0.08)] border border-[rgba(163,113,247,0.2)] rounded-md px-3 py-2 text-xs text-[#a371f7] mb-3">
-                    🔍 {v.word_study}
-                  </div>
+                  <WordStudy text={v.word_study} />
                 )}
                 {v.cross_references && v.cross_references.length > 0 && (
                   <div className="flex gap-2 flex-wrap">
@@ -342,7 +459,108 @@ function SectionCard({
   );
 }
 
-/* ─── Spinner ─── */
+/* ─── WordStudy with clickable Strong's references ─── */
+function WordStudy({ text }: { text: string }) {
+  const [activeRef, setActiveRef] = useState<string | null>(null);
+  const [strongsData, setStrongsData] = useState<{
+    ref: string;
+    language: string;
+    lemma: string;
+    strongs_def: string;
+    kjv_def: string;
+    derivation: string;
+    xlit?: string;
+    pron?: string;
+  } | null>(null);
+  const [loadingRef, setLoadingRef] = useState<string | null>(null);
+
+  // Parse text into segments: plain text + Strong's refs
+  const segments = text.split(/([GH]\d{1,4})/gi);
+
+  const handleStrongsClick = async (ref: string) => {
+    const normalized = ref.toUpperCase();
+    if (activeRef === normalized) {
+      setActiveRef(null);
+      return;
+    }
+    setActiveRef(normalized);
+    setLoadingRef(normalized);
+    try {
+      const res = await fetch(`/api/strongs?ref=${normalized}`);
+      if (res.ok) {
+        const data = await res.json();
+        setStrongsData(data);
+      }
+    } catch {
+      // silently fail — dictionary is a bonus
+    } finally {
+      setLoadingRef(null);
+    }
+  };
+
+  return (
+    <div className="bg-[rgba(163,113,247,0.08)] border border-[rgba(163,113,247,0.2)] rounded-md px-3 py-2 text-xs mb-3">
+      <span className="text-[#a371f7]">🔍 </span>
+      {segments.map((seg, i) => {
+        const isStrongs = /^[GH]\d{1,4}$/i.test(seg);
+        if (isStrongs) {
+          const normalized = seg.toUpperCase();
+          const isOpen = activeRef === normalized;
+          return (
+            <span key={i} className="relative inline">
+              <button
+                onClick={() => handleStrongsClick(seg)}
+                className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded font-mono text-[11px] transition-all ${
+                  isOpen
+                    ? "bg-[#a371f7] text-white"
+                    : "bg-[rgba(163,113,247,0.15)] text-[#a371f7] hover:bg-[rgba(163,113,247,0.3)]"
+                }`}
+              >
+                {normalized}
+                {loadingRef === normalized && (
+                  <span className="inline-block w-2.5 h-2.5 border border-[#a371f7] border-t-transparent rounded-full animate-spin" />
+                )}
+              </button>
+              {isOpen && strongsData && strongsData.ref === normalized && (
+                <div className="absolute z-50 bottom-full left-0 mb-2 w-72 bg-[#161b22] border border-[#30363d] rounded-lg p-4 shadow-xl text-left">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[#a371f7] font-bold text-sm">
+                      {strongsData.lemma}
+                    </span>
+                    <span className="text-[#484f58] text-[10px]">
+                      {strongsData.ref} · {strongsData.language}
+                    </span>
+                  </div>
+                  {strongsData.xlit && (
+                    <p className="text-[#8b949e] text-[11px] mb-1">
+                      Transliteration: <span className="text-[#c9d1d9]">{strongsData.xlit}</span>
+                      {strongsData.pron && <> · Pronunciation: <span className="text-[#c9d1d9]">{strongsData.pron}</span></>}
+                    </p>
+                  )}
+                  <p className="text-[#c9d1d9] text-[11px] leading-relaxed mb-2">
+                    <span className="text-[#8b949e]">Definition: </span>
+                    {strongsData.strongs_def}
+                  </p>
+                  <p className="text-[#c9d1d9] text-[11px] leading-relaxed mb-2">
+                    <span className="text-[#8b949e]">KJV Translation: </span>
+                    {strongsData.kjv_def}
+                  </p>
+                  {strongsData.derivation && (
+                    <p className="text-[#8b949e] text-[10px] leading-relaxed border-t border-[#30363d] pt-2 mt-1">
+                      <span className="text-[#484f58]">Derivation: </span>
+                      {strongsData.derivation}
+                    </p>
+                  )}
+                </div>
+              )}
+            </span>
+          );
+        }
+        return <span key={i} className="text-[#a371f7]">{seg}</span>;
+      })}
+    </div>
+  );
+}
 function Spinner() {
   return (
     <svg
