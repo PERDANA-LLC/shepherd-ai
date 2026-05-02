@@ -68,6 +68,15 @@ type StudyData = L1Study | L2Study | L3Study | L4Study | LegacyStudy;
 interface StudyResponse { success: boolean; reference: string; translation: string; level?: number; level_name?: string; study: StudyData; }
 interface HistoryEntry { id: string; reference: string; date: string; study: StudyResponse; }
 
+interface Recommendation {
+  tier: "beginner" | "intermediate" | "expert";
+  label: string;
+  description: string;
+  action: string;
+  next_passage?: string;
+  reason: string;
+}
+
 const HISTORY_KEY = "shepherd-ai-history";
 const MAX_HISTORY = 20;
 
@@ -190,6 +199,10 @@ export default function AppPage() {
   const [study, setStudy] = useState<StudyResponse | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [recsLoading, setRecsLoading] = useState(false);
+  const [recError, setRecError] = useState("");
+  const [selectedRec, setSelectedRec] = useState<string | null>(null);
 
   useEffect(() => { setHistory(loadHistory()); }, []);
 
@@ -211,6 +224,41 @@ export default function AppPage() {
       if (err instanceof DOMException && err.name === "AbortError") setError("Study took too long. Try a shorter passage.");
       else setError("Could not connect. Check your internet.");
     } finally { setLoading(false); }
+  };
+
+  const fetchRecommendations = async () => {
+    if (!study) return;
+    setRecsLoading(true); setRecError(""); setRecommendations([]); setSelectedRec(null);
+    try {
+      const res = await fetch("/api/recommend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ passage: study.reference, level: study.level || 3, context: "study_complete" }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setRecError(data.error || "Could not load recommendations."); }
+      else { setRecommendations(data.recommendations || []); }
+    } catch { setRecError("Could not connect to recommendation engine."); }
+    finally { setRecsLoading(false); }
+  };
+
+  const acceptRecommendation = async (rec: Recommendation) => {
+    setSelectedRec(rec.tier);
+    try {
+      await fetch("/api/recommend/accept", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          passage: study?.reference,
+          level: study?.level,
+          tier: rec.tier,
+          label: rec.label,
+          action: rec.action,
+          next_passage: rec.next_passage,
+          reason: rec.reason,
+        }),
+      });
+    } catch { /* silent — journaled locally even if DB fails */ }
   };
 
   return (
@@ -258,6 +306,73 @@ export default function AppPage() {
               <blockquote className="border-l-3 border-[#d2991d] pl-4 text-[#c9d1d9] leading-relaxed whitespace-pre-line italic">{study.study.passage_text}</blockquote>
             </div>
             <LevelResult study={study.study} level={study.level || 0} />
+
+            {/* ── Recommendations Engine ── */}
+            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">
+              {!recommendations.length && !recsLoading && !recError && (
+                <button onClick={fetchRecommendations} className="w-full text-center py-4 text-[#58a6ff] hover:text-[#79c0ff] transition-colors">
+                  <span className="text-lg mr-2">💡</span>
+                  What should I study next?
+                </button>
+              )}
+              {recsLoading && (
+                <div className="text-center py-4">
+                  <Spinner />
+                  <p className="text-[#8b949e] text-sm mt-2">Generating recommendations...</p>
+                </div>
+              )}
+              {recError && (
+                <div className="text-center py-4">
+                  <p className="text-[#f85149] text-sm">{recError}</p>
+                  <button onClick={fetchRecommendations} className="text-[#58a6ff] text-xs mt-2 hover:underline">Try again</button>
+                </div>
+              )}
+              {recommendations.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-[#c9d1d9] mb-3 flex items-center gap-2">
+                    💡 What's Next?
+                    {selectedRec && <span className="text-[#3fb950] text-xs font-normal">— ✓ Action journaled</span>}
+                  </h3>
+                  <div className="grid gap-3">
+                    {recommendations.map((rec) => {
+                      const config = { beginner: { emoji: "🌱", color: "green", border: "border-l-[#3fb950]" }, intermediate: { emoji: "🌿", color: "blue", border: "border-l-[#58a6ff]" }, expert: { emoji: "🌳", color: "purple", border: "border-l-[#a371f7]" } }[rec.tier];
+                      const isSelected = selectedRec === rec.tier;
+                      return (
+                        <div key={rec.tier}
+                          className={`bg-[#0d1117] border ${isSelected ? config.border + " border-l-4 opacity-60" : "border-[#30363d]"} rounded-lg p-4 transition-all ${!selectedRec ? "cursor-pointer hover:border-[#58a6ff]/50" : ""}`}
+                          onClick={() => !selectedRec && acceptRecommendation(rec)}>
+                          <div className="flex items-start gap-3">
+                            <span className="text-xl mt-0.5">{config.emoji}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className={`text-xs font-semibold uppercase tracking-wide ${config.color === "green" ? "text-[#3fb950]" : config.color === "blue" ? "text-[#58a6ff]" : "text-[#a371f7]"}`}>{rec.tier}</span>
+                                {isSelected && <span className="text-[#3fb950] text-xs">✓ Selected</span>}
+                                {!selectedRec && <span className="text-[#484f58] text-xs">Click to journal</span>}
+                              </div>
+                              <p className="text-[#c9d1d9] text-sm font-medium mb-1">{rec.label}</p>
+                              <p className="text-[#8b949e] text-xs leading-relaxed mb-2">{rec.description}</p>
+                              <div className="flex items-center gap-2 text-xs">
+                                <span className="text-[#58a6ff] font-medium">Action:</span>
+                                <span className="text-[#c9d1d9]">{rec.action}</span>
+                              </div>
+                              {rec.next_passage && (
+                                <p className="text-[#d2991d] text-xs mt-1 font-mono">📖 {rec.next_passage}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {selectedRec && (
+                    <button onClick={() => { setRecommendations([]); setSelectedRec(null); }}
+                      className="w-full mt-3 text-xs text-[#8b949e] hover:text-[#c9d1d9] py-2 transition-colors">
+                      Ask for new recommendations
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </main>
       )}
