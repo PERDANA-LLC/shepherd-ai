@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { lookupPassage, versesToText } from "@/lib/bible";
 
+// Vercel Hobby plan allows up to 60s for serverless functions
+export const maxDuration = 60;
+
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY!;
 const DEEPSEEK_BASE_URL = process.env.DEEPSEEK_BASE_URL || "https://openrouter.ai/api/v1";
 const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL || "deepseek/deepseek-v4-pro";
@@ -110,8 +113,9 @@ Generate the study following your system instructions. Return valid JSON only.`;
     const content = aiData.choices?.[0]?.message?.content;
 
     if (!content) {
+      console.error("DeepSeek returned empty content. Full response:", JSON.stringify(aiData).slice(0, 500));
       return NextResponse.json(
-        { error: "No response from the AI study engine." },
+        { error: "The AI study engine returned an empty response. This can happen if the passage is too long or the API is rate-limited. Try a shorter passage." },
         { status: 502 }
       );
     }

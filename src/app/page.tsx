@@ -42,20 +42,39 @@ export default function Home() {
     setStudy(null);
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120_000); // 2 min timeout
+
       const res = await fetch("/api/study", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ passage: passage.trim() }),
+        signal: controller.signal,
       });
 
-      const data = await res.json();
+      clearTimeout(timeoutId);
+
+      // Handle non-JSON responses gracefully
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        setError("The server returned an unexpected response. Please try again.");
+        return;
+      }
+
       if (!res.ok) {
-        setError(data.error || "Something went wrong.");
+        setError(data.error || `Server error (${res.status}). Please try again.`);
       } else {
         setStudy(data);
       }
-    } catch {
-      setError("Could not connect to the study engine. Please try again.");
+    } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setError("The study took too long. DeepSeek can be slow — try a shorter passage like a single verse.");
+      } else {
+        setError("Could not connect to the study engine. Check your internet and try again.");
+      }
     } finally {
       setLoading(false);
     }
