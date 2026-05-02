@@ -20,11 +20,13 @@ Shepherd AI helps you study the King James Bible with the depth of a trained tea
 
 ## Quick Start
 
-1. **Open Shepherd AI** in your browser at `http://localhost:3000` (local) or your deployed URL.
+1. **Open Shepherd AI** at `https://shepherd-ai-chi.vercel.app`.
 2. **Type a Bible reference** in the search bar — for example, `John 3:16`.
-3. **Click "Study →"** and wait for the AI to generate your study (typically 30–90 seconds).
+3. **Click "Study →"** and wait for the AI to generate your study (typically 10–20 seconds).
 4. **Explore the results** — scroll through the verse-by-verse breakdown, cross-references, themes, and application questions.
 5. **Click any cross-reference** to instantly study that passage too.
+6. **Download as PDF** — click the blue "PDF" button to save a formatted copy of your study.
+7. **Browse your history** — click "📋 History" to revisit past studies (saved automatically).
 
 That's it. No account needed for basic use.
 
@@ -120,6 +122,26 @@ A short, doctrinally sound prayer based on the passage. Use it as-is to close yo
 
 Every cross-reference in the verse breakdown is interactive. Click `Romans 5:8` while studying John 3:16, and Shepherd AI immediately runs a new study on Romans 5:8. This lets you chase themes and connections through scripture effortlessly.
 
+### 📄 PDF Export
+
+Every study includes a blue **"PDF"** button in the top-right corner. Click it to download a fully formatted A4 PDF of your study — complete with passage text, historical context, verse-by-verse breakdown, key themes, application questions, and prayer prompt. Perfect for printing, sharing with a small group, or saving to your study journal.
+
+### 📋 Study History
+
+Shepherd AI automatically saves your last 20 studies to your browser's local storage. Click the **"📋 History"** chip below the search bar to view your recent studies. Click any entry to instantly reload it. Use the "Clear All" button to start fresh. Your history stays on your device — nothing is sent to a server.
+
+### 🔍 Clickable Strong's Concordance
+
+When the AI references a Strong's Concordance number (like `G3439` for μονογενής / "only begotten"), it appears as a clickable purple badge. Click it to open a popover showing:
+
+- **Original word** in Greek or Hebrew script
+- **Transliteration** and pronunciation
+- **Definition** from Strong's dictionary
+- **KJV translation** — how the word is rendered in the King James
+- **Derivation** — root words and etymology
+
+Shepherd AI includes the complete Strong's Concordance: **5,523 Greek** and **8,674 Hebrew** entries, all looked up locally — no external API calls.
+
 ### Quick-Suggestion Chips
 
 Below the search bar, you'll find quick-access chips for popular passages:
@@ -166,10 +188,10 @@ The goal is consistency, not volume. One well-studied verse per day is better th
 ## FAQ
 
 ### Is Shepherd AI free?
-Yes. The core Bible study engine is free to use. Future premium tiers may add printable PDF guides, unlimited studies, and advanced word-study tools.
+Yes. All features are free — PDF export, study history, and Strong's Concordance lookups are included. No account required.
 
 ### What Bible translation does it use?
-**Exclusively the King James Version (KJV).** The system prompt instructs the AI to use only KJV text, and the local database contains the full KJV canon. This is by design — Shepherd AI is built for those who prefer the King James tradition.
+**Exclusively the King James Version (KJV).** The system prompt instructs the AI to use only KJV text, and the local database contains the full 31,102-verse KJV canon.
 
 ### Is the AI's interpretation trustworthy?
 Shepherd AI is guided by a theologically conservative system prompt that enforces:
@@ -180,8 +202,11 @@ Shepherd AI is guided by a theologically conservative system prompt that enforce
 
 That said, **AI is a tool, not a pastor.** Always compare what you read with scripture itself (Acts 17:11). Shepherd AI is designed to assist your study, not replace it.
 
-### Why does it take 30–90 seconds?
-The AI (DeepSeek-4-Pro) reads the full passage, researches context, identifies cross-references, and generates a structured study — all in one pass. This takes time, especially for longer passages. The result is a thorough, thoughtful study, not a quick keyword search.
+### Why does it take 10–20 seconds?
+The AI (DeepSeek V3 via OpenRouter) reads the full passage, researches context, identifies cross-references, and generates a structured study — all in one pass. Longer passages take more time. Cold starts on Vercel can add a few extra seconds.
+
+### Can I look up any Strong's number?
+Yes! Click any `G####` (Greek) or `H####` (Hebrew) reference in a word study to see the full Strong's dictionary entry. Shepherd AI ships with the complete Strong's Concordance — 14,197 entries total.
 
 ### Can I study more than one passage at once?
 Currently, each study focuses on one passage. But cross-references are clickable, so you can quickly chain studies together.
@@ -200,10 +225,19 @@ There's no hard limit, but very long passages (entire books) may hit the AI's co
 
 | Component | Source |
 |-----------|--------|
-| KJV Bible text | Local JSON database — 31,102 verses, 66 books, 6.4 MB |
-| AI study engine | DeepSeek-4-Pro via OpenRouter API |
+| KJV Bible text | Local JSON — 31,102 verses, 66 books, 6.4 MB |
+| AI study engine | DeepSeek V3 (deepseek-chat) via OpenRouter API |
+| Strong's Concordance | Local JSON — 5,523 Greek + 8,674 Hebrew entries, 3.7 MB |
 | Web framework | Next.js 16 (Turbopack) |
 | Styling | Tailwind CSS + custom dark theme |
+| PDF generation | Client-side jsPDF — no server needed |
+
+### API Routes
+
+| Route | Purpose |
+|-------|---------|
+| `POST /api/study` | Generate a complete KJV Bible study |
+| `GET /api/strongs?ref=G3439` | Look up a Strong's Concordance entry |
 
 ### Reference Parsing
 
@@ -244,11 +278,15 @@ The parser maps 70+ aliases to 66 canonical book names. If a reference doesn't r
 │    📖 Passage text (KJV)                                 │
 │    🏛️  Historical context                                │
 │    📖 Verse-by-verse breakdown                           │
+│    🔍 Clickable Strong's references                      │
 │    🔑 Key themes                                         │
 │    💭 Application questions                              │
 │    🙏 Prayer prompt                                      │
 │                                                         │
-│  Click any cross-reference to study that passage too.    │
+│  Actions:                                                │
+│    [PDF]  Download as formatted A4 PDF                   │
+│    [📋]   Revisit past studies (auto-saved)              │
+│    📎     Click cross-references to chain studies        │
 │                                                         │
 └─────────────────────────────────────────────────────────┘
 ```
