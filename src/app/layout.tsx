@@ -3,6 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://bs.thomasperdana.com"),
   title: "Shepherd AI — KJV Bible Study Assistant",
   description:
     "AI-powered King James Version Bible study tool. Get cross-references, word studies, historical context, and application questions — 24/7, free.",

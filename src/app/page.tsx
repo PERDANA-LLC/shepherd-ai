@@ -44,7 +44,7 @@ export default function LandingPage() {
           <span className="inline-block bg-[rgba(88,166,255,0.12)] border border-[rgba(88,166,255,0.25)] text-[#58a6ff] px-4 py-1 rounded-full text-xs font-semibold uppercase tracking-wide mb-6">
             AI-Powered KJV Bible Study
           </span>
-          <h1 className="text-6xl font-extrabold mb-4 tracking-tight">
+          <h1 className="text-4xl sm:text-6xl font-extrabold mb-4 tracking-tight">
             <span className="bg-gradient-to-br from-white via-[#58a6ff] to-[#a371f7] bg-clip-text text-transparent">
               Shepherd AI
             </span>

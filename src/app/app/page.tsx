@@ -345,7 +345,7 @@ export default function AppPage() {
       {/* ── Dashboard widgets ── */}
       {!loading && (
         <div className="max-w-5xl mx-auto px-4 pt-6">
-          <div className="grid sm:grid-cols-3 gap-3 mb-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-2">
             <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4 flex items-center gap-3">
               <span className="text-2xl">🐑</span>
               <div>
@@ -379,7 +379,7 @@ export default function AppPage() {
           <h2 className="text-2xl font-bold text-[#c9d1d9] mb-2">Study the Word</h2>
           <p className="text-[#8b949e] text-sm max-w-xl mx-auto mb-6">Enter any passage, choose your level, get a tailored KJV study.</p>
           <form onSubmit={handleSubmit} className="max-w-xl mx-auto space-y-3">
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <input type="text" value={passage} onChange={e => setPassage(e.target.value)} placeholder='Try "John 3:16" or "Romans 8:28-30"' className="flex-1 px-5 py-3.5 rounded-lg bg-[#161b22] border border-[#30363d] text-[#c9d1d9] text-base placeholder:text-[#484f58] focus:outline-none focus:border-[#58a6ff] focus:ring-1 focus:ring-[#58a6ff] transition-all" disabled={loading} />
               <button type="submit" disabled={loading || !passage.trim()} className="px-6 py-3.5 bg-[#1f6feb] hover:bg-[#388bfd] disabled:bg-[#21262d] disabled:text-[#484f58] text-white font-semibold rounded-lg transition-all flex items-center gap-2">{loading ? <><Spinner /> Studying...</> : "Study →"}</button>
             </div>
