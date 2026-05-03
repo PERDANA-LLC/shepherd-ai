@@ -15,17 +15,22 @@
 | 4-Level Study Generation | ✅ Done | L1–L4 with level-specific JSON schemas |
 | KJV Local Bible Lookup | ✅ Done | 31K verses, 70+ aliases in `lib/bible.ts` |
 | Strong's Concordance Popovers | ✅ Done | 14K entries, clickable in UI |
-| PDF Export | ✅ Done | jsPDF with Unicode sanitizer |
+| PDF Export (All Levels) | ✅ Done | L1–L4 + legacy, jsPDF with Unicode sanitizer |
 | Christological Root | ✅ Done | System prompt enforced |
-| Clerk Auth (sign-up/sign-in) | ✅ Done | Middleware, ClerkProvider, protected /app |
-| Landing Page | ✅ Done | / → marketing page with Start Free CTA |
+| Clerk Auth (sign-up/sign-in) | ✅ Done | Google/GitHub/Facebook social login live |
+| Landing Page | ✅ Done | / → marketing page with auth detection |
+| Login Blink Fix | ✅ Done | Client-side auth redirect, manual middleware |
 | Vercel Production Deploy | ✅ Done | bs.thomasperdana.com, GitHub auto-deploy |
-| Vercel Env Vars | ✅ Done | 9 env vars (Clerk 6 + Supabase 3) |
+| Vercel Env Vars | ✅ Done | Clerk + Supabase + DeepSeek |
 | Supabase Client | ✅ Done | `src/lib/supabase.ts` wired |
 | Supabase Tables | ✅ Done | shepherd_* (7 tables incl. recommendations) |
-| **Recommendation Engine** | ✅ Done | 3-tier (beginner/intermediate/expert), journaled |
+| Recommendation Engine | ✅ Done | 3-tier (beginner/intermediate/expert), journaled |
 | DeepSeek V3 Integration | ✅ Done | Fast, works on Vercel Hobby (60s) |
-| localStorage History | ⚠️ Partial | 20 entries local — not yet migrated to Supabase |
+| Privacy Policy | ✅ Done | /privacy.html linked from footer |
+| App Icon | ✅ Done | 1024px + all standard sizes + favicon |
+| Study History → Supabase | ✅ Done | `/api/history` with localStorage fallback |
+| User Profile Auto-Creation | ✅ Done | `/api/profile` auto-creates on first visit |
+| localStorage History | ⚠️ Fallback | Kept as fallback for non-authenticated users |
 
 ---
 
@@ -43,18 +48,18 @@
 - [x] App shell with UserButton in header at `/app`
 - [x] Test: middleware redirect works (307 → /sign-in for unauthenticated)
 
-### 1.2 Study History → Supabase (Replace localStorage)
-- [ ] Create `/api/history` route (GET list, POST save, DELETE clear)
-- [ ] Save each generated study to `shepherd_studies` table
-- [ ] Load history from Supabase instead of localStorage
-- [ ] Keep localStorage as fallback for non-authenticated users
-- [ ] Add `created_at` filter — show user's study history sorted by date
-- [ ] Test: 2 users, each sees only their own history
+### 1.2 Study History → Supabase (Replace localStorage) ✅ DONE
+- [x] Create `/api/history` route (GET list, POST save, DELETE clear)
+- [x] Save each generated study to `shepherd_studies` table
+- [x] Load history from Supabase instead of localStorage
+- [x] Keep localStorage as fallback for non-authenticated users
+- [x] Add `created_at` filter — show user's study history sorted by date
+- [x] Test: 2 users, each sees only their own history
 
-### 1.3 User Profile Auto-Creation
-- [ ] When user signs up, create row in `shepherd_profiles` via Clerk webhook or on first study
-- [ ] Default: `study_level: 1, teacher_level: 1`
-- [ ] Link profile to Clerk user ID
+### 1.3 User Profile Auto-Creation ✅ DONE
+- [x] When user signs up, create row in `shepherd_profiles` on first visit
+- [x] Default: `study_level: 1, teacher_level: 1`
+- [x] Link profile to Clerk user ID
 
 ### 1.4 Vercel Env Sync ✅ DONE
 - [x] Set Supabase env vars on Vercel
