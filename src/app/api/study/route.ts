@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { lookupPassage, versesToText } from "@/lib/bible";
-import { CHRISTOLOGICAL_ROOT_PROMPT } from "@/lib/christological-root";
+import { buildTheologicalRoot, type FocusMode } from "@/lib/theological-root";
 
 // Vercel Hobby plan allows up to 60s for serverless functions
 export const maxDuration = 60;
@@ -34,10 +34,10 @@ const LEVEL_CONFIG: Record<number, { name: string; audience: string; voice: stri
   },
 };
 
-function buildSystemPrompt(level: number): string {
+function buildSystemPrompt(level: number, focus: FocusMode = "christological"): string {
   const cfg = LEVEL_CONFIG[level] || LEVEL_CONFIG[3];
 
-  const base = `${CHRISTOLOGICAL_ROOT_PROMPT}
+  const base = `${buildTheologicalRoot(focus)}
 
 ---
 
@@ -193,7 +193,13 @@ IMPORTANT: Return ONLY the JSON object. No markdown fences, no explanation text.
 
 interface StudyRequest {
   passage: string;
-  level?: number; // 1=5th, 2=high school, 3=college, 4=PhD (default: 3)
+  level?: number;
+  focus?: FocusMode; // "christological" | "trinitarian" | "theological"
+}
+
+function validateFocus(focus: unknown): FocusMode {
+  if (focus === "trinitarian" || focus === "theological") return focus;
+  return "christological"; // default
 }
 
 function validateLevel(level: unknown): number {
@@ -210,6 +216,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json() as StudyRequest;
     const { passage } = body;
     const level = validateLevel(body.level);
+    const focus = validateFocus(body.focus);
 
     if (!passage || typeof passage !== "string") {
       return NextResponse.json(
@@ -232,7 +239,7 @@ export async function POST(request: NextRequest) {
     const cfg = LEVEL_CONFIG[level];
 
     // Step 2: Build level-specific prompt and send to DeepSeek
-    const systemPrompt = buildSystemPrompt(level);
+    const systemPrompt = buildSystemPrompt(level, focus);
 
     const userMessage = `Passage: ${result.reference}
 KJV Text:

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { downloadStudyPDF } from "@/lib/pdf";
+import { FOCUS_MODES, type FocusMode } from "@/lib/theological-root";
 
 // ── Types (shared with landing page) ───────────────────────────────
 
@@ -197,6 +198,7 @@ export default function AppPage() {
   const { user } = useUser();
   const [passage, setPassage] = useState("");
   const [level, setLevel] = useState<StudyLevel>(3);
+  const [focus, setFocus] = useState<FocusMode>("christological");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [study, setStudy] = useState<StudyResponse | null>(null);
@@ -267,7 +269,7 @@ export default function AppPage() {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 120_000);
-      const res = await fetch("/api/study", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ passage: passage.trim(), level }), signal: controller.signal });
+      const res = await fetch("/api/study", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ passage: passage.trim(), level, focus }), signal: controller.signal });
       clearTimeout(timeoutId);
       const text = await res.text();
       let data;
@@ -390,6 +392,19 @@ export default function AppPage() {
                     ? l.level===1?"bg-[rgba(63,185,80,0.12)] border-[rgba(63,185,80,0.3)] text-[#3fb950]":l.level===2?"bg-[rgba(210,153,29,0.12)] border-[rgba(210,153,29,0.3)] text-[#d2991d]":l.level===3?"bg-[rgba(88,166,255,0.12)] border-[rgba(88,166,255,0.3)] text-[#58a6ff]":"bg-[rgba(163,113,247,0.12)] border-[rgba(163,113,247,0.3)] text-[#a371f7]"
                     : "bg-[#21262d] border-[#30363d] text-[#8b949e] hover:text-[#c9d1d9] hover:border-[#484f58]"}`}
                 title={l.description}>{l.emoji} {l.name}</button>)}
+            </div>
+            <div className="flex gap-1.5 justify-center mt-2">
+              {(Object.keys(FOCUS_MODES) as FocusMode[]).map(f => (
+                <button key={f} type="button" onClick={() => setFocus(f)} disabled={loading}
+                  className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${
+                    focus === f
+                      ? "bg-[rgba(212,153,29,0.12)] border-[rgba(212,153,29,0.3)] text-[#d2991d]"
+                      : "bg-[#21262d] border-[#30363d] text-[#8b949e] hover:text-[#c9d1d9]"
+                  }`}
+                  title={FOCUS_MODES[f].description}>
+                  {FOCUS_MODES[f].emoji} {FOCUS_MODES[f].label}
+                </button>
+              ))}
             </div>
           </form>
         </div>
