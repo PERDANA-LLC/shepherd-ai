@@ -2,206 +2,182 @@
 
 **Repo:** PERDANA-LLC/shepherd-ai
 **Deploy:** bs.thomasperdana.com
-**DB:** Supabase hermesdb (shepherd_* tables)
-**Auth:** Clerk (live — sign-up, sign-in, protected routes)
+**DB:** Supabase hermesdb (shepherd_* tables, 14 tables)
+**Auth:** Clerk (Google, GitHub, Facebook social login)
 **Stack:** Next.js 16 · TypeScript · DeepSeek V3 · KJV Local JSON
 
 ---
 
-## CURRENT STATE (What's Built)
-
-| Feature | Status | Notes |
-|---------|--------|-------|
-| 4-Level Study Generation | ✅ Done | L1–L4 with level-specific JSON schemas |
-| KJV Local Bible Lookup | ✅ Done | 31K verses, 70+ aliases in `lib/bible.ts` |
-| Strong's Concordance Popovers | ✅ Done | 14K entries, clickable in UI |
-| PDF Export (All Levels) | ✅ Done | L1–L4 + legacy, jsPDF with Unicode sanitizer |
-| Christological Root | ✅ Done | System prompt enforced |
-| Clerk Auth (sign-up/sign-in) | ✅ Done | Google/GitHub/Facebook social login live |
-| Landing Page | ✅ Done | / → marketing page with auth detection |
-| Login Blink Fix | ✅ Done | Client-side auth redirect, manual middleware |
-| Vercel Production Deploy | ✅ Done | bs.thomasperdana.com, GitHub auto-deploy |
-| Vercel Env Vars | ✅ Done | Clerk + Supabase + DeepSeek |
-| Supabase Client | ✅ Done | `src/lib/supabase.ts` wired |
-| Supabase Tables | ✅ Done | shepherd_* (7 tables incl. recommendations) |
-| Recommendation Engine | ✅ Done | 3-tier (beginner/intermediate/expert), journaled |
-| DeepSeek V3 Integration | ✅ Done | Fast, works on Vercel Hobby (60s) |
-| Privacy Policy | ✅ Done | /privacy.html linked from footer |
-| App Icon | ✅ Done | 1024px + all standard sizes + favicon |
-| Study History → Supabase | ✅ Done | `/api/history` with localStorage fallback |
-| User Profile Auto-Creation | ✅ Done | `/api/profile` auto-creates on first visit |
-| localStorage History | ⚠️ Fallback | Kept as fallback for non-authenticated users |
-
----
-
-## PHASE 1 — FOUNDATION (Auth + Supabase Wiring)
-
-**Goal:** Users can sign up, log in, and their data persists to Supabase.
-
-### 1.1 Clerk Auth Setup ✅ DONE
-- [x] Set up Clerk app (clerk.com) — got publishable key + secret key
-- [x] Add Clerk env vars to `.env.local`
-- [x] Add Clerk env vars to Vercel (production)
-- [x] Create `src/middleware.ts` — Clerk middleware protecting `/app/*` and API routes
-- [x] Wrap app with `<ClerkProvider>` in `layout.tsx`
-- [x] Create sign-in page at `/sign-in` and sign-up at `/sign-up`
-- [x] App shell with UserButton in header at `/app`
-- [x] Test: middleware redirect works (307 → /sign-in for unauthenticated)
-
-### 1.2 Study History → Supabase (Replace localStorage) ✅ DONE
-- [x] Create `/api/history` route (GET list, POST save, DELETE clear)
-- [x] Save each generated study to `shepherd_studies` table
-- [x] Load history from Supabase instead of localStorage
-- [x] Keep localStorage as fallback for non-authenticated users
-- [x] Add `created_at` filter — show user's study history sorted by date
-- [x] Test: 2 users, each sees only their own history
-
-### 1.3 User Profile Auto-Creation ✅ DONE
-- [x] When user signs up, create row in `shepherd_profiles` on first visit
-- [x] Default: `study_level: 1, teacher_level: 1`
-- [x] Link profile to Clerk user ID
-
-### 1.4 Vercel Env Sync ✅ DONE
-- [x] Set Supabase env vars on Vercel
-- [x] Set Clerk env vars on Vercel
-- [x] Deploy and verify auth + Supabase work in production
-
----
-
-## PHASE 2 — BS5 CORE (Assessment + Journal)
-
-**Goal:** Users can assess their level and keep a private journal.
-
-### 2.1 Assessment Engine
-- [ ] Build assessment page at `/app/assess`
-- [ ] 7 dimensions × 3 questions each = 21 questions
-- [ ] Progress bar showing questions remaining
-- [ ] Auto-calculate level from average score
-- [ ] Save assessment results to `shepherd_assessments`
-- [ ] Update `shepherd_profiles.study_level` based on assessment
-- [ ] Show results: radar chart of 7 dimensions with recommended path
-
-### 2.2 Journal System
-- [ ] Build journal page at `/app/journal`
-- [ ] Journal entry form matching bs5 structure
-- [ ] Save to `shepherd_journals` table
-- [ ] Privacy enforcement: `prayer` and `struggle` fields have NO share toggle
-- [ ] CRUD: view past entries, edit, delete
-- [ ] "Save Study + Journal" button on study results page
-- [ ] **Fruit of the Spirit Tracker** — two complementary frameworks:
-  - [ ] **Galatians 5:22-23** — 9 fruits of the Spirit: love, joy, peace, longsuffering, gentleness, goodness, faith, meekness, temperance
-  - [ ] **James 3:17-18** — 7 fruits of heavenly wisdom: pure, peaceable, gentle, easy to be intreated, full of mercy, without partiality, without hypocrisy (+ good fruits)
-  - [ ] Overlap map: peace ↔ peaceable, gentleness ↔ gentle, meekness ↔ easy to be intreated, goodness ↔ good fruits/mercy
-  - [ ] Self-assessment: rate each attribute 1–5 after each journal entry
-  - [ ] Radar chart showing current fruit profile (both frameworks toggleable)
-  - [ ] Growth timeline — track scores over weeks/months
-  - [ ] Weakest area → generates prayer prompt + recommended study passage
-  - [ ] Study integration — identify which fruits/wisdom attributes are taught in the current passage
-  - [ ] Side-by-side view: Spirit fruit vs. wisdom fruit, showing where they converge and diverge
-  - [ ] Save scores to `shepherd_fruit_scores` table (user_id, date, framework, 9+7 scores)
-
-### 2.3 Dashboard
-- [ ] Build `/app` as dashboard (currently just study generator)
-- [ ] Widgets: recent studies, recent journals, assessment score, streak
-- [ ] "Continue where you left off" — last study or journal entry
-
----
-
-## PHASE 3 — CURRICULUM PATHS
-
-### 3.1 Curriculum Engine
-- [ ] Build curriculum page at `/app/curriculum`
-- [ ] 4 paths: Seeker's (12wk), Disciple's (16wk), Teacher's (24wk), Scholar's (ongoing)
-- [ ] Path data as TypeScript config
-
-### 3.2 Module Tracker
-- [ ] Track module completion to `shepherd_progress`
-- [ ] Progress bar + next module prompt
-
-### 3.3 Workbook Generation (BS4)
-- [ ] Create `/api/workbook` route
-- [ ] Save to `shepherd_workbooks`
-- [ ] PDF export for workbooks
-
----
-
-## PHASE 4 — FLYWHEEL ANALYTICS
-
-### 4.1 Flywheel Data Collection
-- [ ] Track: study count, journal frequency, level progression
-
-### 4.2 30-Day Flywheel Report
-- [ ] Build flywheel page at `/app/flywheel`
-- [ ] 7-dimension scorecard with narrative feedback
-- [ ] Plateau detection
-
-### 4.3 Growth Visualization
-- [ ] Level progression timeline, calendar heatmap, radar chart
-
----
-
-## PHASE 5 — COMMUNITY + SHARING
-
-- [ ] Privacy-first sharing engine (hard blocks on prayer/struggle)
-- [ ] Share Snippet, Anonymous Testimony, link sharing
-
----
-
-## PHASE 6 — TEACHER TOOLS + TONA GROUP
-
-- [ ] Group management, teacher dashboard, leader's guide generator
-
----
-
-## PHASE 7 — POLISH + LAUNCH
-
-- [ ] Mobile responsive, performance optimization, testing + QA
-
----
-
-## NEW: RECOMMENDATION ENGINE ✅ DONE
+## CURRENT STATE
 
 | Feature | Status |
-|---------|--------|
-| `/api/recommend` — DeepSeek 3-tier recommendations | ✅ Live |
-| `/api/recommend/accept` — save to Supabase | ✅ Live |
-| UI panel after study results | ✅ Live |
-| `shepherd_recommendations` table | ✅ Live |
+|---|---|
+| 4-Level Study Generation (L1-L4) | ✅ |
+| KJV Local Bible Lookup (31K verses) | ✅ |
+| Strong's Concordance (14K entries) | ✅ |
+| PDF Export (all 4 levels + legacy) | ✅ |
+| Christological Root (system prompt enforced) | ✅ |
+| Clerk Auth (Google/GitHub/Facebook) | ✅ |
+| Landing Page (auth detection, no blink) | ✅ |
+| App Icon (1024px + all sizes + favicon) | ✅ |
+| Privacy Policy (/privacy.html) | ✅ |
+| Study History → Supabase + localStorage fallback | ✅ |
+| User Profile Auto-Creation | ✅ |
+| Recommendation Engine (3-tier, journaled) | ✅ |
+| **Phase 2: Assessment (21 q's, radar chart)** | ✅ |
+| **Phase 2: Journal + Fruit Tracker (Gal 5 + Jas 3)** | ✅ |
+| **Phase 2: Dashboard widgets** | ✅ |
+| **Phase 3: Curriculum (4 paths × 64 modules)** | ✅ |
+| **Phase 3: Workbook Generator (4-session + PDF)** | ✅ |
+| **Phase 4: Flywheel Analytics (7-dim scorecard)** | ✅ |
+| **Phase 4: Heatmap, Radar, Timeline, Plateau detection** | ✅ |
+| **Phase 5: Community Feed + Sharing Engine** | ✅ |
+| **Phase 5: Testimony Wall (Pray/Encourage)** | ✅ |
+| **Phase 6: Study Groups (create/join/invite codes)** | ✅ |
+| **Phase 6: Leader's Guide Generator** | ✅ |
 
 ---
 
-## FILE STRUCTURE (Current)
+## PHASE 1 — FOUNDATION ✅ DONE
+
+Clerk auth, Supabase wiring, Vercel deploy, study history, profiles, recommendations, privacy policy, app icon, login fix.
+
+---
+
+## PHASE 2 — BS5 CORE ✅ DONE
+
+- `/app/assess` — 21-question diagnostic, 7-dimension radar chart, auto-level
+- `/app/journal` — CRUD journal, Fruit of Spirit (Gal 5:22-23 + Jas 3:17-18), privacy locks
+- Dashboard widgets on `/app` (welcome, quick actions, stats)
+
+---
+
+## PHASE 3 — CURRICULUM PATHS ✅ DONE
+
+- `/app/curriculum` — 4 paths (Seeker's 12wk, Disciple's 16wk, Teacher's 24wk, Scholar's ongoing) × 64 total modules
+- Each module: passage, themes, objectives, key questions, memory verse, Christological connection
+- Progress tracking with checkmarks + NEXT badge
+- `/app/workbook` — DeepSeek 4-session workbook generator with PDF export
+
+---
+
+## PHASE 4 — FLYWHEEL ANALYTICS ✅ DONE
+
+- `/api/flywheel` — aggregates study, journal, assessment, workbook data
+- `/app/flywheel` — 7-dimension scorecard (study consistency, journal depth, prayer life, scripture memory, application, community, growth trajectory)
+- Circular score gauge, radar chart, GitHub-style heatmap, activity timeline
+- Plateau detection with suggestions
+- Personalized 30-day narrative report
+
+---
+
+## PHASE 5 — COMMUNITY + SHARING ✅ DONE
+
+- `/app/community` — 4 tabs: Feed, Testimonies, Prayer Wall, Share
+- Privacy enforcement at API level: prayer/struggle fields STRIPPED before sharing
+- Anonymous testimonies with 🙏 Pray / 💛 Encourage interactions
+- Share study insights or journal reflections
+- `/api/share`, `/api/testimony` routes
+
+---
+
+## PHASE 6 — TEACHER TOOLS ✅ DONE
+
+- `/app/groups` — create groups (auto 6-char invite code), join via code, member list
+- Leader/teacher/member roles
+- `/api/leader-guide` — AI-generated session plan: welcome, read, discuss, apply, pray
+- Leader notes for each discussion question, tough Q&A, group size adaptations
+- Christological focus + homework assignment per session
+
+---
+
+## PHASE 7 — POLISH + LAUNCH 🔜
+
+- [ ] Mobile responsive design (all pages)
+- [ ] Performance optimization (image lazy loading, bundle analysis)
+- [ ] SEO metadata (OG tags, structured data)
+- [ ] Error boundary + 404 page
+- [ ] Rate limiting on API routes
+- [ ] Accessibility audit
+- [ ] End-to-end testing
+- [ ] Launch checklist
+
+---
+
+## FILE STRUCTURE
 
 ```
 src/
 ├── app/
-│   ├── page.tsx                → Landing page
-│   ├── layout.tsx              → ClerkProvider + global layout
+│   ├── page.tsx                    → Landing page
+│   ├── layout.tsx                  → Root layout + metadata
 │   ├── app/
-│   │   ├── page.tsx            → Study generator + recommendations
-│   │   └── layout.tsx          → App shell (nav + UserButton)
-│   ├── sign-in/[[...sign-in]]/  → Clerk sign-in
-│   └── sign-up/[[...sign-up]]/  → Clerk sign-up
+│   │   ├── page.tsx                → Study generator + dashboard
+│   │   ├── layout.tsx              → App shell nav (8 links)
+│   │   ├── assess/page.tsx         → 21-question diagnostic
+│   │   ├── journal/page.tsx        → Journal + Fruit tracker
+│   │   ├── curriculum/page.tsx     → 64-module curriculum
+│   │   ├── workbook/page.tsx       → Workbook generator + PDF
+│   │   ├── flywheel/page.tsx       → 30-day growth report
+│   │   ├── community/page.tsx      → Sharing + testimony wall
+│   │   └── groups/page.tsx         → Study groups + leader guide
+│   ├── sign-in/                    → Clerk sign-in
+│   └── sign-up/                    → Clerk sign-up
 ├── api/
-│   ├── study/route.ts          → Study generation
-│   ├── strongs/route.ts        → Strong's lookup
-│   ├── recommend/route.ts      → 3-tier recommendations
-│   └── recommend/accept/route.ts → Save accepted recommendation
+│   ├── study/route.ts              → Study generation
+│   ├── strongs/route.ts            → Strong's lookup
+│   ├── assess/route.ts             → Assessment save
+│   ├── history/route.ts            → Study history CRUD
+│   ├── profile/route.ts            → User profile
+│   ├── journal/route.ts            → Journal CRUD
+│   ├── recommend/route.ts          → 3-tier recommendations
+│   ├── recommend/accept/route.ts   → Accept recommendation
+│   ├── workbook/route.ts           → Workbook generation
+│   ├── flywheel/route.ts           → Flywheel data aggregation
+│   ├── share/route.ts              → Community sharing
+│   ├── testimony/route.ts          → Testimony wall
+│   ├── groups/route.ts             → Group management
+│   ├── groups/[id]/members/route.ts → Group members
+│   └── leader-guide/route.ts       → Leader guide generation
+├── components/
+│   └── RadarChart.tsx              → SVG radar chart
 ├── lib/
-│   ├── bible.ts                → KJV lookup
-│   ├── christological-root.ts  → Root prompt
-│   ├── pdf.ts                  → PDF export
-│   └── supabase.ts             → DB client
-└── middleware.ts                → Clerk auth guard
+│   ├── bible.ts                    → KJV lookup
+│   ├── christological-root.ts      → Root prompt
+│   ├── curriculum.ts               → 64-module curriculum data
+│   ├── pdf.ts                      → PDF export (all levels)
+│   └── supabase.ts                 → DB client
+└── middleware.ts                    → Clerk auth guard
 ```
+
+---
+
+## DATABASE (Supabase hermesdb — 14 tables)
+
+| Table | Purpose |
+|---|---|
+| shepherd_profiles | User profiles (Clerk-linked) |
+| shepherd_studies | Study history |
+| shepherd_journals | Journal entries + fruit scores |
+| shepherd_fruit_scores | Fruit tracker time series |
+| shepherd_assessments | Assessment results |
+| shepherd_workbooks | Generated workbooks |
+| shepherd_recommendations | 3-tier recommendations |
+| shepherd_progress | Curriculum/module progress |
+| shepherd_shares | Community shared content |
+| shepherd_testimonies | Anonymous testimonies |
+| shepherd_prayer_requests | Opt-in prayer sharing |
+| shepherd_groups | Study groups |
+| shepherd_group_members | Group membership |
+| shepherd_leader_guides | Leader's guides |
 
 ---
 
 ## KEY CONSTRAINTS
 
 | Constraint | Impact |
-|-----------|--------|
-| Vercel Hobby 60s timeout | DeepSeek V3 (3–15s) ✅ |
-| Supabase free tier 500MB | Monitor as journals grow |
-| Clerk free tier 10K MAU | Fine for TONA group |
+|---|---|
+| Vercel Hobby 60s timeout | DeepSeek V3 (3-15s) ✅ |
+| Supabase free tier 500MB | Monitor as usage grows |
+| Clerk free tier 10K MAU | Fine for current scale |
 | Local KJV JSON (6.4MB) | Committed to git |
