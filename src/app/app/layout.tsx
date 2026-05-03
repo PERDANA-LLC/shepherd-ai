@@ -19,6 +19,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <Link href="/app" className="text-sm px-3 py-1.5 rounded-md text-[#8b949e] hover:text-[#c9d1d9] hover:bg-[#21262d] transition-all">
                 Study
               </Link>
+              <Link href="/app/curriculum" className="text-sm px-3 py-1.5 rounded-md text-[#8b949e] hover:text-[#c9d1d9] hover:bg-[#21262d] transition-all">
+                Curriculum
+              </Link>
+              <Link href="/app/workbook" className="text-sm px-3 py-1.5 rounded-md text-[#8b949e] hover:text-[#c9d1d9] hover:bg-[#21262d] transition-all">
+                Workbooks
+              </Link>
               <Link href="/app/journal" className="text-sm px-3 py-1.5 rounded-md text-[#8b949e] hover:text-[#c9d1d9] hover:bg-[#21262d] transition-all">
                 Journal
               </Link>
