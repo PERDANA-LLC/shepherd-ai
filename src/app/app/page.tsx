@@ -409,6 +409,12 @@ export default function AppPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => downloadStudyPDF(study)} className="text-xs px-3 py-1.5 bg-[#1f6feb] hover:bg-[#388bfd] text-white rounded-lg font-medium transition-all">📄 PDF</button>
+                  <button onClick={() => {
+                    const shareText = `Study: ${study.study.passage_reference}\n\nKey insight from this passage...\n\n${study.study.passage_text?.slice(0, 200) || ''}`;
+                    navigator.clipboard?.writeText(shareText).then(() => {
+                      window.location.href = '/app/community?tab=share';
+                    });
+                  }} className="text-xs px-3 py-1.5 bg-[#21262d] border border-[#30363d] hover:border-[#58a6ff] text-[#c9d1d9] rounded-lg font-medium transition-all">📤 Share</button>
                   <span className="text-xs px-3 py-1 bg-[#21262d] rounded-full text-[#8b949e] border border-[#30363d]">{study.translation}</span>
                 </div>
               </div>
