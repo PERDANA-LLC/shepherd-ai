@@ -28,6 +28,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <Link href="/app/journal" className="text-sm px-3 py-1.5 rounded-md text-[#8b949e] hover:text-[#c9d1d9] hover:bg-[#21262d] transition-all">
                 Journal
               </Link>
+              <Link href="/app/groups" className="text-sm px-3 py-1.5 rounded-md text-[#8b949e] hover:text-[#c9d1d9] hover:bg-[#21262d] transition-all">
+                Groups
+              </Link>
               <Link href="/app/community" className="text-sm px-3 py-1.5 rounded-md text-[#8b949e] hover:text-[#c9d1d9] hover:bg-[#21262d] transition-all">
                 Community
               </Link>
