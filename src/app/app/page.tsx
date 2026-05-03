@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { downloadStudyPDF } from "@/lib/pdf";
 
 // ── Types (shared with landing page) ───────────────────────────────
@@ -194,6 +194,7 @@ function LevelResult({ study, level }: { study: any; level: number }) {
 
 export default function AppPage() {
   const { getToken, userId } = useAuth();
+  const { user } = useUser();
   const [passage, setPassage] = useState("");
   const [level, setLevel] = useState<StudyLevel>(3);
   const [loading, setLoading] = useState(false);
@@ -341,6 +342,36 @@ export default function AppPage() {
 
   return (
     <div>
+      {/* ── Dashboard widgets ── */}
+      {!loading && (
+        <div className="max-w-5xl mx-auto px-4 pt-6">
+          <div className="grid sm:grid-cols-3 gap-3 mb-2">
+            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4 flex items-center gap-3">
+              <span className="text-2xl">🐑</span>
+              <div>
+                <p className="text-[#c9d1d9] text-sm font-semibold">Welcome{user?.firstName ? `, ${user.firstName}` : ""}</p>
+                <p className="text-[#8b949e] text-xs">{profile?.study_level ? `Level ${profile.study_level}` : "Start your journey"}</p>
+              </div>
+            </div>
+            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4">
+              <p className="text-xs text-[#8b949e] mb-2">Quick Actions</p>
+              <div className="flex gap-2">
+                <a href="/app/assess" className="text-xs px-3 py-1.5 bg-[#21262d] border border-[#30363d] hover:border-[#58a6ff] text-[#c9d1d9] rounded-lg transition-all">📊 Assess</a>
+                <a href="/app/journal" className="text-xs px-3 py-1.5 bg-[#21262d] border border-[#30363d] hover:border-[#58a6ff] text-[#c9d1d9] rounded-lg transition-all">📔 Journal</a>
+                <span className="text-xs px-3 py-1.5 bg-[#21262d] border border-[#30363d] text-[#8b949e] rounded-lg">{history.length} studies</span>
+              </div>
+            </div>
+            <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-4">
+              <p className="text-xs text-[#8b949e] mb-2">This Session</p>
+              <div className="flex gap-3 text-xs">
+                <span className="text-[#58a6ff]">📖 {history.length} studies</span>
+                <span className="text-[#3fb950]">{study ? "✅ Study ready" : "Start below →"}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Hero */}
       <header className="text-center px-4 pt-12 pb-8 relative">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] pointer-events-none" style={{ background: "radial-gradient(circle, rgba(88,166,255,0.08) 0%, transparent 70%)" }} />

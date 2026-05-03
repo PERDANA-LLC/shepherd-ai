@@ -88,6 +88,17 @@
 - [ ] Privacy enforcement: `prayer` and `struggle` fields have NO share toggle
 - [ ] CRUD: view past entries, edit, delete
 - [ ] "Save Study + Journal" button on study results page
+- [ ] **Fruit of the Spirit Tracker** — two complementary frameworks:
+  - [ ] **Galatians 5:22-23** — 9 fruits of the Spirit: love, joy, peace, longsuffering, gentleness, goodness, faith, meekness, temperance
+  - [ ] **James 3:17-18** — 7 fruits of heavenly wisdom: pure, peaceable, gentle, easy to be intreated, full of mercy, without partiality, without hypocrisy (+ good fruits)
+  - [ ] Overlap map: peace ↔ peaceable, gentleness ↔ gentle, meekness ↔ easy to be intreated, goodness ↔ good fruits/mercy
+  - [ ] Self-assessment: rate each attribute 1–5 after each journal entry
+  - [ ] Radar chart showing current fruit profile (both frameworks toggleable)
+  - [ ] Growth timeline — track scores over weeks/months
+  - [ ] Weakest area → generates prayer prompt + recommended study passage
+  - [ ] Study integration — identify which fruits/wisdom attributes are taught in the current passage
+  - [ ] Side-by-side view: Spirit fruit vs. wisdom fruit, showing where they converge and diverge
+  - [ ] Save scores to `shepherd_fruit_scores` table (user_id, date, framework, 9+7 scores)
 
 ### 2.3 Dashboard
 - [ ] Build `/app` as dashboard (currently just study generator)
