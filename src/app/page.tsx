@@ -88,8 +88,9 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <footer className="border-t border-[#30363d] text-center py-6 text-[#484f58] text-xs">
+      <footer className="border-t border-[#30363d] text-center py-6 text-[#484f58] text-xs space-y-1">
         <p>Shepherd AI · Built for deeper KJV study · All scripture is public domain</p>
+        <p><a href="/privacy.html" className="hover:text-[#8b949e] transition-colors">Privacy Policy</a></p>
       </footer>
     </div>
   );
