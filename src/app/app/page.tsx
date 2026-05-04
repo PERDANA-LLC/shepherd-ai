@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { downloadStudyPDF } from "@/lib/pdf";
 import { FOCUS_MODES, type FocusMode } from "@/lib/theological-root";
+import ChainReference from "@/components/ChainReference";
 
 // ── Types (shared with landing page) ───────────────────────────────
 
@@ -502,6 +503,9 @@ export default function AppPage() {
                   )}
                 </div>
               )}
+
+              {/* ── Thompson Chain Reference ── */}
+              <ChainReference passage={study.study.passage_reference} focus={focus} />
             </div>
           </div>
         </main>

@@ -16,7 +16,8 @@
 | KJV Local Bible Lookup (31K verses) | ✅ |
 | Strong's Concordance (14K entries) | ✅ |
 | PDF Export (all 4 levels + legacy) | ✅ |
-| Christological Root (system prompt enforced) | ✅ |
+| Theological Root — 3 modes (Christological / Trinity / Systematic) | ✅ |
+| Hope · Faith · Love (1 Cor 13:13) woven into every study | ✅ |
 | Clerk Auth (Google/GitHub/Facebook) | ✅ |
 | Landing Page (auth detection, no blink) | ✅ |
 | App Icon (1024px + all sizes + favicon) | ✅ |
@@ -105,7 +106,36 @@ Clerk auth, Supabase wiring, Vercel deploy, study history, profiles, recommendat
 
 ---
 
-## 🎉 ALL 7 PHASES COMPLETE
+## PHASE 8 — THEOLOGICAL ROOT UPGRADE ✅ DONE
+
+Replaced single Christological focus with a **3-mode selectable theological root** and mandatory **Hope/Faith/Love** analysis (1 Corinthians 13:13).
+
+### Focus Modes
+
+| Mode | Traces |
+|---|---|
+| ✝️ **Christological** | Jesus (Gospels) → OT prophecy → Doctrine → Application |
+| 🔺 **Trinitarian** | Father's plan → Son's work → Spirit's application |
+| 🏛️ **Theological** | Full 7-locus systematic: Theology Proper, Anthropology, Christology, Soteriology, Pneumatology, Ecclesiology, Eschatology |
+
+### Hope · Faith · Love
+
+Every study generated now answers three questions grounded in 1 Corinthians 13:13:
+
+| Virtue | Question |
+|---|---|
+| 🙏 **Faith** | What does this passage teach us to **believe** about God? |
+| 🌟 **Hope** | What does this passage give us to **hope** for? |
+| ❤️ **Love** | How does this passage call us to **love**? |
+
+**Files changed:**
+- `src/lib/christological-root.ts` → upgraded with 3 `buildSystemPrompt(focus)` variants
+- `src/app/api/study/route.ts` → accepts `focus` param, routes to correct prompt
+- `src/app/app/page.tsx` → focus selector UI (3 gold buttons below level selector)
+
+---
+
+## 🎉 ALL 8 PHASES COMPLETE
 
 **Shepherd AI is production-ready at https://bs.thomasperdana.com**
 
@@ -118,6 +148,7 @@ Clerk auth, Supabase wiring, Vercel deploy, study history, profiles, recommendat
 | 5 — Community + Sharing | ✅ |
 | 6 — Teacher Tools + Groups | ✅ |
 | 7 — Polish + Launch | ✅ |
+| 8 — Theological Root Upgrade | ✅ |
 
 **14 database tables · 14 API routes · 10 app pages · 8 app nav links**
 **Tech:** Next.js 16 · Clerk · Supabase · DeepSeek V3 · jsPDF · KJV JSON
