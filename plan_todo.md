@@ -36,6 +36,9 @@
 | **Phase 5: Testimony Wall (Pray/Encourage)** | ✅ |
 | **Phase 6: Study Groups (create/join/invite codes)** | ✅ |
 | **Phase 6: Leader's Guide Generator** | ✅ |
+| **Phase 8: Theological Root — 3 focus modes** | ✅ |
+| **Phase 9: Thompson Chain Reference (50 topics)** | ✅ |
+| **Phase 9: Intertestament Cross-References (24 connections)** | ✅ |
 
 ---
 
@@ -135,7 +138,52 @@ Every study generated now answers three questions grounded in 1 Corinthians 13:1
 
 ---
 
-## 🎉 ALL 8 PHASES COMPLETE
+## PHASE 9 — CROSS-REFERENCE TOOLS ✅ DONE
+
+Two interconnected Bible reference tools on every study result page.
+
+### 🔗 Thompson Chain Reference (50 Topics)
+
+Thompson Chain Reference Bible-style topical chains — trace a topic through Scripture verse by verse.
+
+**50 curated chains across 15 categories:**
+God, Jesus Christ, Holy Spirit, Salvation, Scripture, Sin, Christian Life, Suffering, Church, End Times, Covenants, Discipleship, Wisdom, Family, Cardinal Virtues
+
+**Features:**
+- 📖 **Related tab** — chains containing the current verse (e.g., John 3:16 → God's Love + Faith)
+- 🗂️ **Browse tab** — search all 50 chains by keyword
+- 🔍 **Search tab** — find chains by topic name
+- 🔗 **Chain navigation** — prev/next verse traversal with KJV text
+- 📍 **Position indicator** — "verse 6 of 15" highlighting your passage in the chain
+- 🤖 **AI chain generation** — DeepSeek creates custom topical chains for any passage
+
+**Files:** `src/data/chain-topics.ts`, `src/lib/chain-reference.ts`, `src/app/api/chain/route.ts`, `src/components/ChainReference.tsx`
+
+### 📜 Intertestament Cross-References (24 Connections)
+
+Shows how the Old and New Testaments speak to each other about a given passage.
+
+**24 curated connections:**
+Creation, Protoevangelium, Abrahamic Covenant, Passover Lamb, The Law, Davidic Covenant, Psalm 22 (Crucifixion), Psalm 110 (Priestly King), Virgin Birth, Suffering Servant, New Covenant, Christ + Law, Word Became Flesh, Serpent Lifted Up, Justification by Faith, Adam/Christ Headship, Golden Chain, Hall of Faith, Melchizedek, New Creation, Faith-Hope-Love, The Shepherd, The Temple
+
+**5 connection types with color badges:**
+- 🗣️ Direct Quote — NT explicitly cites OT
+- ✅ Fulfillment — OT prophecy fulfilled in NT
+- 🔗 Typology — OT foreshadows NT reality
+- 💭 Allusion — NT echoes OT theme
+- 📖 Thematic — Doctrinal parallel across testaments
+
+**Features:**
+- 📜 **OT tab** — Old Testament foundations, prophecies, and types
+- ✝️ **NT tab** — New Testament fulfillments, quotes, and expansions
+- 📝 **Full KJV verse text** — every reference rendered with actual Scripture
+- 🤖 **AI: How Christ Fulfills This** — DeepSeek generates cross-testament analysis with Gospel citations
+
+**Files:** `src/data/intertestament-connections.ts`, `src/lib/intertestament.ts`, `src/app/api/intertestament/route.ts`, `src/components/IntertestamentRefs.tsx`
+
+---
+
+## 🎉 ALL 9 PHASES COMPLETE
 
 **Shepherd AI is production-ready at https://bs.thomasperdana.com**
 
@@ -149,8 +197,9 @@ Every study generated now answers three questions grounded in 1 Corinthians 13:1
 | 6 — Teacher Tools + Groups | ✅ |
 | 7 — Polish + Launch | ✅ |
 | 8 — Theological Root Upgrade | ✅ |
+| 9 — Cross-Reference Tools | ✅ |
 
-**14 database tables · 14 API routes · 10 app pages · 8 app nav links**
+**14 database tables · 16 API routes · 12 components · 10 app pages · 8 app nav links**
 **Tech:** Next.js 16 · Clerk · Supabase · DeepSeek V3 · jsPDF · KJV JSON
 
 ---
@@ -189,15 +238,23 @@ src/
 │   ├── testimony/route.ts          → Testimony wall
 │   ├── groups/route.ts             → Group management
 │   ├── groups/[id]/members/route.ts → Group members
-│   └── leader-guide/route.ts       → Leader guide generation
+│   ├── chain/route.ts               → Chain reference lookup + AI generation
+│   ├── intertestament/route.ts       → OT↔NT cross-reference lookup + AI
 ├── components/
-│   └── RadarChart.tsx              → SVG radar chart
+│   ├── ChainReference.tsx            → Thompson chain reference panel
+│   ├── IntertestamentRefs.tsx        → OT↔NT cross-reference panel
+│   └── RadarChart.tsx                → SVG radar chart
+├── data/
+│   ├── chain-topics.ts               → 50 curated Thompson-style topics
+│   └── intertestament-connections.ts → 24 curated OT↔NT connections
 ├── lib/
-│   ├── bible.ts                    → KJV lookup
-│   ├── christological-root.ts      → Root prompt
-│   ├── curriculum.ts               → 64-module curriculum data
-│   ├── pdf.ts                      → PDF export (all levels)
-│   └── supabase.ts                 → DB client
+│   ├── bible.ts                      → KJV lookup
+│   ├── christological-root.ts        → Root prompt
+│   ├── chain-reference.ts            → Chain traversal, AI prompt
+│   ├── intertestament.ts             → Intertestament enrichment, AI prompt
+│   ├── curriculum.ts                 → 64-module curriculum data
+│   ├── pdf.ts                        → PDF export (all levels)
+│   └── supabase.ts                   → DB client
 └── middleware.ts                    → Clerk auth guard
 ```
 
