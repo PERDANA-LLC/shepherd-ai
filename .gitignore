@@ -29,3 +29,7 @@ next-env.d.ts
 
 # Compressed duplicates
 data/strongs.json.gz
+
+# Ignore local files
+client_secret_*.json
+icon-1024.png
