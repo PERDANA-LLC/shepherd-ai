@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { href: "/app/community", label: "Community" },
   { href: "/app/flywheel", label: "Flywheel" },
   { href: "/app/assess", label: "Assess" },
+  { href: "/app/security", label: "Security" },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
