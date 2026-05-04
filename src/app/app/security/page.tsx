@@ -128,16 +128,30 @@ export default function SecurityPage() {
           <div><h2 className="text-lg font-semibold text-[#c9d1d9] mb-2">Step 1: Scan the QR code</h2><p className="text-sm text-[#8b949e] mb-4">Open your authenticator app and scan this QR code.</p>{qrSvg ? <div className="inline-block p-4 bg-white rounded-lg" dangerouslySetInnerHTML={{ __html: qrSvg }} /> : <div className="w-64 h-64 bg-[#21262d] rounded-lg animate-pulse flex items-center justify-center"><span className="text-[#8b949e] text-sm">Generating...</span></div>}</div>
           <div><p className="text-sm text-[#8b949e] mb-1">Or enter manually:</p><code className="block p-3 bg-[#0d1117] border border-[#30363d] rounded text-[#7ee787] text-sm font-mono break-all select-all">{secret}</code></div>
           <div><h2 className="text-lg font-semibold text-[#c9d1d9] mb-2">Step 2: Verify</h2><div className="flex gap-3"><input type="text" inputMode="numeric" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} onKeyDown={(e) => e.key === "Enter" && handleVerify("enable")} placeholder="000000" className="w-32 px-3 py-2 bg-[#0d1117] border border-[#30363d] rounded text-[#c9d1d9] text-lg text-center tracking-widest font-mono focus:border-[#58a6ff] focus:outline-none" autoFocus /><button onClick={() => handleVerify("enable")} disabled={code.length !== 6} className="px-4 py-2 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-md transition-colors">Verify & Enable</button></div></div>
-          <div><button onClick={() => setShowCodes(!showCodes)} className="text-sm text-[#58a6ff] hover:underline">{showCodes ? "Hide" : "Show"} backup codes</button>{showCodes && <div className="mt-3 p-4 bg-[#0d1117] border border-[#f0883e] rounded-lg"><p className="text-sm text-[#f0883e] mb-2 font-semibold">⚠️ Save these somewhere safe!</p><div className="grid grid-cols-2 gap-2">{backupCodes.map((c, i) => <code key={i} className="px-2 py-1 bg-[#21262d] rounded text-[#c9d1d9] text-xs font-mono select-all">{c}</code>)}</div></div>}</div>
+          {backupCodes.length > 0 && (
+            <div className="p-4 bg-[#0d1117] border border-[#f0883e] rounded-lg">
+              <p className="text-sm text-[#f0883e] mb-2 font-semibold">⚠️ Save these backup codes before enabling! You won&apos;t see them again.</p>
+              <div className="grid grid-cols-2 gap-2">
+                {backupCodes.map((c, i) => <code key={i} className="px-2 py-1 bg-[#21262d] rounded text-[#c9d1d9] text-xs font-mono select-all">{c}</code>)}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {/* ENABLED */}
       {status === "enabled" && (
-        <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-6 space-y-6">
-          <div className="flex items-start gap-4"><span className="text-3xl">🔒</span><div><h2 className="text-lg font-semibold text-[#7ee787] mb-1">Two-factor authentication is active</h2><p className="text-sm text-[#8b949e]">Your account is protected.</p></div></div>
-          <div className="border-t border-[#30363d] pt-6"><h3 className="text-sm font-semibold text-[#c9d1d9] mb-3">Disable</h3>{!disabling ? <button onClick={() => setDisabling(true)} className="px-3 py-1.5 text-xs text-[#f85149] border border-[#da3633] rounded hover:bg-[#da3633]/10 transition-colors">Disable MFA</button> : <div className="flex gap-3"><input type="text" inputMode="numeric" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="6-digit code" className="w-32 px-3 py-1.5 bg-[#0d1117] border border-[#30363d] rounded text-[#c9d1d9] text-sm text-center font-mono focus:border-[#58a6ff] focus:outline-none" /><button onClick={handleDisable} className="px-3 py-1.5 bg-[#da3633] hover:bg-[#f85149] text-white text-xs font-medium rounded transition-colors">Confirm</button><button onClick={() => { setDisabling(false); setCode(""); setError(""); }} className="px-3 py-1.5 text-xs text-[#8b949e] hover:text-[#c9d1d9]">Cancel</button></div>}</div>
-        </div>
+        <EnabledPanel
+          code={code}
+          setCode={setCode}
+          error={error}
+          setError={setError}
+          message={message}
+          setMessage={setMessage}
+          disabling={disabling}
+          setDisabling={setDisabling}
+          handleDisable={handleDisable}
+        />
       )}
 
       {/* Info cards */}
@@ -145,6 +159,165 @@ export default function SecurityPage() {
         {[["📱","Authenticator App","Google Authenticator, Authy, 1Password"],["🔑","Backup Codes","10 single-use codes. Save them somewhere safe."],["🛡️","24-Hour Sessions","MFA lasts 24h per device."]].map(([icon,title,desc]) => (
           <div key={title as string} className="p-4 bg-[#161b22] border border-[#30363d] rounded-lg"><span className="text-2xl">{icon}</span><h3 className="text-sm font-semibold text-[#c9d1d9] mt-2 mb-1">{title}</h3><p className="text-xs text-[#8b949e]">{desc}</p></div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Enabled Panel (shown when MFA is active) ─────────────────────────
+
+function EnabledPanel({
+  code, setCode, error, setError, message, setMessage,
+  disabling, setDisabling, handleDisable,
+}: {
+  code: string; setCode: (v: string) => void;
+  error: string; setError: (v: string) => void;
+  message: string; setMessage: (v: string) => void;
+  disabling: boolean; setDisabling: (v: boolean) => void;
+  handleDisable: () => Promise<void>;
+}) {
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [codeCount, setCodeCount] = useState<number | null>(null);
+  const [showBackup, setShowBackup] = useState(false);
+  const [regenCode, setRegenCode] = useState("");
+  const [regenBusy, setRegenBusy] = useState(false);
+
+  // Fetch backup code count on mount
+  useEffect(() => {
+    fetch("/api/mfa/backup")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.count !== undefined) setCodeCount(d.count);
+        if (d.codes) setBackupCodes(d.codes);
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleViewCodes = async () => {
+    setError("");
+    if (!regenCode) { setError("Enter your authenticator code to view backup codes."); return; }
+    setRegenBusy(true);
+    try {
+      // Verify first, then fetch codes
+      const v = await fetch("/api/mfa/verify", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: regenCode, mode: "totp" }),
+      });
+      const vd = await v.json();
+      if (vd.error) { setError(vd.error); return; }
+      // Now fetch
+      const r = await fetch("/api/mfa/backup");
+      const d = await r.json();
+      setBackupCodes(d.codes || []);
+      setCodeCount(d.count || 0);
+      setShowBackup(true);
+      setRegenCode("");
+    } catch { setError("Failed to load backup codes."); }
+    finally { setRegenBusy(false); }
+  };
+
+  const handleRegenerate = async () => {
+    setError("");
+    if (!regenCode) { setError("Enter your authenticator code to regenerate."); return; }
+    setRegenBusy(true);
+    try {
+      const r = await fetch("/api/mfa/backup", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: regenCode }),
+      });
+      const d = await r.json();
+      if (d.error) { setError(d.error); return; }
+      setBackupCodes(d.backupCodes);
+      setCodeCount(d.backupCodes.length);
+      setShowBackup(true);
+      setRegenCode("");
+      setMessage("✅ New backup codes generated! Save them now.");
+    } catch { setError("Failed to regenerate."); }
+    finally { setRegenBusy(false); }
+  };
+
+  return (
+    <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-6 space-y-6">
+      <div className="flex items-start gap-4">
+        <span className="text-3xl">🔒</span>
+        <div>
+          <h2 className="text-lg font-semibold text-[#7ee787] mb-1">
+            Two-factor authentication is active
+          </h2>
+          <p className="text-sm text-[#8b949e]">Your account is protected.</p>
+        </div>
+      </div>
+
+      {/* ── Backup Codes ── */}
+      <div className="border-t border-[#30363d] pt-6">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-[#c9d1d9]">Backup Codes</h3>
+          {codeCount !== null && (
+            <span className="text-xs text-[#8b949e] bg-[#21262d] px-2 py-0.5 rounded">
+              {codeCount} remaining
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-[#8b949e] mb-3">
+          Use backup codes if you lose access to your authenticator app. Each code works once.
+        </p>
+
+        {showBackup && backupCodes.length > 0 && (
+          <div className="mb-4 p-4 bg-[#0d1117] border border-[#f0883e] rounded-lg">
+            <p className="text-xs text-[#f0883e] mb-2 font-semibold">
+              ⚠️ Save these somewhere safe! They won&apos;t be shown again.
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {backupCodes.map((c, i) => (
+                <code key={i} className="px-2 py-1 bg-[#21262d] rounded text-[#c9d1d9] text-xs font-mono select-all">
+                  {c}
+                </code>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-3 mb-2">
+          <div className="flex gap-2 items-center">
+            <input
+              type="text" inputMode="numeric" maxLength={6}
+              value={regenCode}
+              onChange={(e) => setRegenCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="TOTP code"
+              className="w-28 px-2 py-1.5 bg-[#0d1117] border border-[#30363d] rounded text-[#c9d1d9] text-sm text-center font-mono focus:border-[#58a6ff] focus:outline-none"
+            />
+            <button
+              onClick={handleViewCodes}
+              disabled={regenBusy || regenCode.length !== 6}
+              className="px-3 py-1.5 text-xs bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] rounded transition-colors disabled:opacity-40"
+            >
+              View codes
+            </button>
+            <button
+              onClick={handleRegenerate}
+              disabled={regenBusy || regenCode.length !== 6}
+              className="px-3 py-1.5 text-xs bg-[#1a2332] border border-[#58a6ff] text-[#58a6ff] hover:bg-[#58a6ff]/10 rounded transition-colors disabled:opacity-40"
+            >
+              Regenerate
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Disable ── */}
+      <div className="border-t border-[#30363d] pt-6">
+        <h3 className="text-sm font-semibold text-[#c9d1d9] mb-3">Disable</h3>
+        {!disabling ? (
+          <button onClick={() => setDisabling(true)} className="px-3 py-1.5 text-xs text-[#f85149] border border-[#da3633] rounded hover:bg-[#da3633]/10 transition-colors">
+            Disable MFA
+          </button>
+        ) : (
+          <div className="flex gap-3">
+            <input type="text" inputMode="numeric" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="6-digit code" className="w-32 px-3 py-1.5 bg-[#0d1117] border border-[#30363d] rounded text-[#c9d1d9] text-sm text-center font-mono focus:border-[#58a6ff] focus:outline-none" />
+            <button onClick={handleDisable} className="px-3 py-1.5 bg-[#da3633] hover:bg-[#f85149] text-white text-xs font-medium rounded transition-colors">Confirm</button>
+            <button onClick={() => { setDisabling(false); setCode(""); setError(""); }} className="px-3 py-1.5 text-xs text-[#8b949e] hover:text-[#c9d1d9]">Cancel</button>
+          </div>
+        )}
       </div>
     </div>
   );
