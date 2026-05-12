@@ -4,8 +4,10 @@ import { useState, useEffect } from "react";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { downloadStudyPDF } from "@/lib/pdf";
 import { FOCUS_MODES, type FocusMode } from "@/lib/theological-root";
+import { getAllStudyTypeMeta, type StudyTypeId } from "@/lib/study-types";
 import ChainReference from "@/components/ChainReference";
 import IntertestamentRefs from "@/components/IntertestamentRefs";
+import StudyTypeRenderer from "@/components/StudyTypeRenderer";
 
 // ── Types (shared with landing page) ───────────────────────────────
 
@@ -69,7 +71,7 @@ interface LegacyStudy {
   key_themes?: string[]; application_questions?: string[]; prayer_prompt?: string;
 }
 type StudyData = L1Study | L2Study | L3Study | L4Study | LegacyStudy;
-interface StudyResponse { success: boolean; reference: string; translation: string; level?: number; level_name?: string; study: StudyData; }
+interface StudyResponse { success: boolean; reference: string; translation: string; level?: number; level_name?: string; study_type?: StudyTypeId | null; study: StudyData; }
 interface HistoryEntry { id: string; reference: string; date: string; study: StudyResponse; }
 
 interface Recommendation {
@@ -201,6 +203,7 @@ export default function AppPage() {
   const [passage, setPassage] = useState("");
   const [level, setLevel] = useState<StudyLevel>(3);
   const [focus, setFocus] = useState<FocusMode>("christological");
+  const [studyType, setStudyType] = useState<StudyTypeId | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [study, setStudy] = useState<StudyResponse | null>(null);
@@ -271,7 +274,7 @@ export default function AppPage() {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 120_000);
-      const res = await fetch("/api/study", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ passage: passage.trim(), level, focus }), signal: controller.signal });
+      const res = await fetch("/api/study", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ passage: passage.trim(), level, focus, study_type: studyType || undefined }), signal: controller.signal });
       clearTimeout(timeoutId);
       const text = await res.text();
       let data;
@@ -395,6 +398,28 @@ export default function AppPage() {
                     : "bg-[#21262d] border-[#30363d] text-[#8b949e] hover:text-[#c9d1d9] hover:border-[#484f58]"}`}
                 title={l.description}>{l.emoji} {l.name}</button>)}
             </div>
+            {getAllStudyTypeMeta().length > 0 && (
+              <div className="flex gap-1.5 justify-center flex-wrap mt-2">
+                <button type="button" onClick={() => setStudyType(undefined)} disabled={loading}
+                  className={`text-xs px-2.5 py-1.5 rounded-lg border transition-all font-medium ${
+                    !studyType ? "bg-[rgba(88,166,255,0.12)] border-[rgba(88,166,255,0.3)] text-[#58a6ff]"
+                              : "bg-[#21262d] border-[#30363d] text-[#8b949e] hover:text-[#c9d1d9]"
+                  }`}>
+                  📖 Standard Study
+                </button>
+                {getAllStudyTypeMeta().map(st => (
+                  <button key={st.id} type="button" onClick={() => setStudyType(st.id)} disabled={loading}
+                    className={`text-xs px-2.5 py-1.5 rounded-lg border transition-all font-medium ${
+                      studyType === st.id
+                        ? "bg-[rgba(212,153,29,0.12)] border-[rgba(212,153,29,0.3)] text-[#d2991d]"
+                        : "bg-[#21262d] border-[#30363d] text-[#8b949e] hover:text-[#c9d1d9]"
+                    }`}
+                    title={`${st.description} — Best for: ${st.bestFor}`}>
+                    {st.emoji} {st.label}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="flex gap-1.5 justify-center mt-2">
               {(Object.keys(FOCUS_MODES) as FocusMode[]).map(f => (
                 <button key={f} type="button" onClick={() => setFocus(f)} disabled={loading}
@@ -423,6 +448,11 @@ export default function AppPage() {
                 <div className="flex items-center gap-3">
                   <h2 className="text-xl font-bold text-[#c9d1d9]">{study.study.passage_reference}</h2>
                   {study.level && <LevelBadge level={study.level} />}
+                  {study.study_type && (
+                    <span className="text-xs px-2.5 py-0.5 rounded-full border font-medium bg-[rgba(212,153,29,0.12)] border-[rgba(212,153,29,0.3)] text-[#d2991d]">
+                      📋 Study Type: {study.study_type.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => downloadStudyPDF(study)} className="text-xs px-3 py-1.5 bg-[#1f6feb] hover:bg-[#388bfd] text-white rounded-lg font-medium transition-all">📄 PDF</button>
@@ -437,7 +467,11 @@ export default function AppPage() {
               </div>
               <blockquote className="border-l-3 border-[#d2991d] pl-4 text-[#c9d1d9] leading-relaxed whitespace-pre-line italic">{study.study.passage_text}</blockquote>
             </div>
-            <LevelResult study={study.study} level={study.level || 0} />
+            {study.study_type ? (
+              <StudyTypeRenderer study={study.study} studyType={study.study_type} level={study.level || 3} />
+            ) : (
+              <LevelResult study={study.study} level={study.level || 0} />
+            )}
 
             {/* ── Recommendations Engine ── */}
             <div className="bg-[#161b22] border border-[#30363d] rounded-xl p-5">

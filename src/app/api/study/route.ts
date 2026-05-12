@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { lookupPassage, versesToText } from "@/lib/bible";
 import { buildTheologicalRoot, type FocusMode } from "@/lib/theological-root";
+import { STUDY_TYPES, type StudyTypeId, getStudyTypeLevel, buildStudyTypeSchema } from "@/lib/study-types";
 
 // Vercel Hobby plan allows up to 60s for serverless functions
 export const maxDuration = 60;
@@ -34,7 +35,7 @@ const LEVEL_CONFIG: Record<number, { name: string; audience: string; voice: stri
   },
 };
 
-function buildSystemPrompt(level: number, focus: FocusMode = "christological"): string {
+function buildSystemPrompt(level: number, focus: FocusMode = "christological", studyType?: StudyTypeId): string {
   const cfg = LEVEL_CONFIG[level] || LEVEL_CONFIG[3];
 
   const base = `${buildTheologicalRoot(focus)}
@@ -52,6 +53,25 @@ Core rules (ALL levels):
 3. NEVER speculate beyond what scripture actually says.
 4. Scripture references use standard notation (e.g., John 3:16).
 5. Return valid JSON only — no markdown fences, no extra text.`;
+
+  // If study type is specified, use its schema instead of default level schema
+  if (studyType) {
+    const st = STUDY_TYPES[studyType];
+    const stLevel = getStudyTypeLevel(studyType, level);
+    const schemaBlock = buildStudyTypeSchema(studyType, level);
+
+    return `${base}
+
+STUDY TYPE: ${st.label} (${st.emoji})
+${st.description}
+
+${stLevel.promptInstructions}
+
+OUTPUT JSON SCHEMA (return exactly this shape):
+${schemaBlock}
+
+IMPORTANT: Return ONLY the JSON object matching this schema. No markdown fences, no explanation text.`;
+  }
 
   const levelPrompts: Record<number, string> = {
     1: `
@@ -195,11 +215,17 @@ interface StudyRequest {
   passage: string;
   level?: number;
   focus?: FocusMode; // "christological" | "trinitarian" | "theological"
+  study_type?: StudyTypeId; // 10 study methodologies (optional — defaults to standard)
 }
 
 function validateFocus(focus: unknown): FocusMode {
   if (focus === "trinitarian" || focus === "theological") return focus;
   return "christological"; // default
+}
+
+function validateStudyType(st: unknown): StudyTypeId | undefined {
+  if (typeof st === "string" && st in STUDY_TYPES) return st as StudyTypeId;
+  return undefined; // undefined = use default behavior (no study type)
 }
 
 function validateLevel(level: unknown): number {
@@ -217,6 +243,7 @@ export async function POST(request: NextRequest) {
     const { passage } = body;
     const level = validateLevel(body.level);
     const focus = validateFocus(body.focus);
+    const studyType = validateStudyType(body.study_type);
 
     if (!passage || typeof passage !== "string") {
       return NextResponse.json(
@@ -239,7 +266,7 @@ export async function POST(request: NextRequest) {
     const cfg = LEVEL_CONFIG[level];
 
     // Step 2: Build level-specific prompt and send to DeepSeek
-    const systemPrompt = buildSystemPrompt(level, focus);
+    const systemPrompt = buildSystemPrompt(level, focus, studyType);
 
     const userMessage = `Passage: ${result.reference}
 KJV Text:
@@ -318,6 +345,7 @@ Generate a Level ${level} (${cfg.name}) Bible study following your system instru
       translation: "King James Version (local)",
       level,
       level_name: cfg.name,
+      study_type: studyType || null, // NEW — study methodology used
       study: studyData,
     });
   } catch (error) {
