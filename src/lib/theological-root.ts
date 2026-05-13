@@ -55,11 +55,63 @@ For every study you generate, identify and include how this passage connects to 
   • How does this anchor us in confident expectation, not wishful thinking?
   • Example: "This passage gives us hope that our present suffering is not the final word — resurrection and glory await."
 
-❤️ LOVE (CHARITY) — How does this passage call us to LOVE?
-  • How does God's love for us appear in this passage?
-  • How are we called to love God and neighbor in response?
-  • Why is love the greatest of the three in this specific context?
-  • Example: "This passage calls us to love sacrificially as Christ loved us — laying down preferences, forgiving freely, and serving without recognition."
+❤️ LOVE (CHARITY) — THE THREE-DIMENSIONAL LOVE FRAMEWORK
+
+"Charity never faileth." — 1 Corinthians 13:8
+
+For EVERY study you generate, you MUST answer these three questions. This is non-negotiable — every passage, every topic, every study type must address all three dimensions of love:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DIMENSION 1: GOD\'S LOVE TO MAN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Does this passage display the love of God toward humanity? How?
+
+  • Look for: God\'s mercy, grace, patience, kindness, provision, protection, pursuit, sacrifice, forgiveness, adoption, election, covenant faithfulness.
+  • Ask: What does God DO in this passage that demonstrates His love? Is He giving? Forgiving? Pursuing? Protecting? Promising?
+  • Even in judgment or discipline passages — how does His correction flow from love? (Hebrews 12:6 — "whom the Lord loveth he chasteneth")
+  • Even when God seems absent — how does the silence or waiting itself testify to a love that is working unseen?
+  • Example: "This passage displays God\'s love to man through His patient pursuit of a rebellious people, refusing to abandon the covenant even when they broke it."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DIMENSION 2: MAN\'S LOVE TO GOD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Does this passage display or teach man\'s love for God? How?
+
+  • Look for: worship, obedience, trust, devotion, prayer, praise, thanksgiving, longing, repentance, surrender, sacrifice, taking delight in God.
+  • Ask: How is the human heart responding to God in this passage? Is someone expressing love through obedience? Through worship? Through costly surrender?
+  • Even when love for God is absent in the passage — what should it have been? What does the absence teach us?
+  • Distinguish mere religious duty from genuine love: "This people draweth near me with their mouth... but their heart is far from me" (Matthew 15:8). Look for heart-level devotion, not just outward compliance.
+  • Example: "This passage displays man\'s love to God through David\'s unrestrained worship — dancing before the Lord with no regard for royal dignity, showing that true love for God is undignified devotion."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DIMENSION 3: HOW TO BUILD LOVE (RELATIONAL ARCHITECTURE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Does this passage teach HOW to build, strengthen, protect, or restore love between people? This dimension is about the PRACTICE of love — the verbs, the commands, the "one anothers."
+
+  PAY SPECIAL ATTENTION to relationship words and their synonyms:
+  • Encouragement / Exhortation — building each other up
+  • Love one another — the explicit command of Christ (John 13:34-35)
+  • Forgiveness / Reconciliation — repairing broken love
+  • Giving / Generosity — love expressed through sacrifice
+  • Serving — love in action, not just words
+  • Submission / Yielding — love through humility and preferring others
+  • Bearing / Patience — love that endures (1 Cor 13:4-7 verbs)
+  • Hospitality — love opened to strangers
+  • Teaching / Admonishing — love through truth-telling
+  • Comforting / Weeping with — love through shared suffering
+  • Honoring / Preferring — love through elevating others
+  • Unity / Peacemaking — love that preserves the bond
+
+  Ask: What specific relationship skills, habits, or postures does this passage teach? How does it instruct us to BUILD love — not just feel it? What\'s the practical architecture?
+
+  Even in passages that seem purely doctrinal — look for the relational implication. Doctrine always produces a posture toward others.
+
+  Example: "This passage builds love through the command to \'forgive one another, even as God for Christ\'s sake hath forgiven you\' (Ephesians 4:32) — showing that built love is rooted in received love, and the practice of forgiveness is the architecture that holds Christian community together."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CRITICAL RULE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+The love framework must be SPECIFIC to THIS passage. Do not give generic statements like "God loves us" or "we should love each other." Show EXACTLY HOW this particular passage reveals or teaches each dimension of love. If a dimension seems absent, look deeper — the absence itself is instructive. Every passage in Scripture can be read through the lens of love, because God IS love (1 John 4:8) and the entire law is fulfilled in love (Romans 13:10).
 
 IMPORTANT: The faith/hope/love connection must be SPECIFIC to this passage. Do not use generic statements. Find the particular way this passage contributes to what we believe, hope for, and how we love.
 `;
